@@ -1,4 +1,4 @@
-import CSVTable from './CSVTable';
+import CSVTable from '@/components/CSVTable';
 
 interface CSVData {
   headers: string[];

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import Papa from 'papaparse';
-import { CSVIcon } from './Icons';
+import { CSVIcon } from '@/components/Icons';
 
 export interface CSVFile {
   filename: string;

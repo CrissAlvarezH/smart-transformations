@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import CSVPreview from './components/CSVPreview';
-import CSVUploader, { CSVFile } from './components/CSVUploader';
+import CSVPreview from '@/components/CSVPreview';
+import CSVUploader, { CSVFile } from '@/components/CSVUploader';
 import { ArrowRightIcon } from 'lucide-react';
 
 
