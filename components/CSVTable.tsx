@@ -50,7 +50,7 @@ export default function CSVTable({ csvData}: CSVTableProps) {
 
   return (
     <div 
-      className={`overflow-auto border border-gray-300 rounded-sm shadow-sm bg-white ${
+      className={`overflow-auto border border-gray-300 shadow-sm bg-white ${
         isResizing ? 'cursor-col-resize select-none' : ''
       }`}
     >

@@ -4,6 +4,9 @@ import { useState } from 'react';
 import CSVPreview from '@/components/CSVPreview';
 import CSVUploader, { CSVFile } from '@/components/CSVUploader';
 import { ArrowRightIcon } from 'lucide-react';
+import { usePGLiteDB } from '@/lib/pglite-context';
+import { useRouter } from 'next/navigation';
+import { insertCSVFileIntoDatabase } from '@/services/csv-files';
 
 
 export default function Home() {
@@ -68,12 +71,7 @@ export default function Home() {
                 >
                   Discard
                 </button>
-                <button
-                  className="flex items-center cursor-pointer border border-green-300 gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-md hover:text-green-700 text-sm font-medium "
-                >
-                  Use this file
-                  <ArrowRightIcon className="h-5 w-5 text-green-500 " />
-                </button>
+                <UseCSVFileButton csvFile={csvFile} />
               </div>
             </div>
           </div>
@@ -83,4 +81,25 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+
+function UseCSVFileButton({ csvFile }: { csvFile: CSVFile }) {
+  const { db } = usePGLiteDB();
+  const router = useRouter();
+
+  const handleClick = async () => {
+    const tableName = await insertCSVFileIntoDatabase(db, csvFile);
+    router.push(`/${tableName}`);
+  }
+
+  return (
+    <button
+      className="flex items-center cursor-pointer border border-green-300 gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-md hover:text-green-700 text-sm font-medium "
+      onClick={handleClick}
+    >
+      Use this file
+      <ArrowRightIcon className="h-5 w-5 text-green-500 " />
+    </button>
+  )
 }
