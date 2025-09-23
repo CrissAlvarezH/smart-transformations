@@ -62,7 +62,7 @@ export function Chat() {
         ) : (
           <div
             ref={scrollContainerRef}
-            className="flex-1 min-h-0 overflow-y-scroll px-4 py-6"
+            className="flex-1 min-h-0 overflow-y-scroll px-4 py-6 custom-scrollbar-dark"
             style={{
               scrollBehavior: 'smooth',
               overscrollBehavior: 'contain'
@@ -88,7 +88,7 @@ export function Chat() {
               onChange={handleMessageChange}
               placeholder="Describe what you want to do with the data"
               rows={3}
-              className="flex-1 bg-transparent px-3 py-3 text-white placeholder-gray-500 focus:outline-none min-h-[56px] max-h-48 resize-none overflow-y-auto"
+              className="flex-1 bg-transparent px-3 py-3 text-white placeholder-gray-500 focus:outline-none min-h-[56px] max-h-48 resize-none overflow-y-auto custom-scrollbar-dark"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
