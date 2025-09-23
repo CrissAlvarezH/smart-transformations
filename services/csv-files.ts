@@ -1,4 +1,4 @@
-import { CSVFile } from "@/components/CSVUploader";
+import { CSVFile } from "@/components/csv-uploader";
 import PGLiteManager from "@/lib/pglite";
 
 

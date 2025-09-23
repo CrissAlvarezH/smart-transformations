@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import CSVPreview from '@/components/CSVPreview';
-import CSVUploader, { CSVFile } from '@/components/CSVUploader';
+import CSVPreview from '@/components/csv-preview';
+import CSVUploader, { CSVFile } from '@/components/csv-uploader';
 import { ArrowRightIcon } from 'lucide-react';
 import { usePGLiteDB } from '@/lib/pglite-context';
 import { useRouter } from 'next/navigation';

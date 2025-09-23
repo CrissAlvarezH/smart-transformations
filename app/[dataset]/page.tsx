@@ -1,11 +1,11 @@
 "use client";
 
-import CSVTable from "@/components/CSVTable";
+import CSVTable from "@/components/csv-table";
 import { usePGLiteDB } from "@/lib/pglite-context";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { Chat } from "@/components/chat/Chat";
+import { Chat } from "@/components/chat/chat";
 import { CSVIcon } from "@/components/Icons";
 
 
