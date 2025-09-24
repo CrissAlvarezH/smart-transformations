@@ -22,8 +22,20 @@ export async function createDataset(
 }
 
 
-export function createTableNameFromCSVFile(csvFile: CSVFile) {
-  return csvFile.filename.replace('.csv', '').replace(/\s+/g, '_').toLowerCase().replace(/[^a-z0-9_]/g, '');
+export function generateTableNameFromCSVFile(filename: string) {
+  let tableName = (
+    filename
+    .replace('.csv', '') // 1. remove .csv
+    .trim() // 2. remove trailing spaces
+    .replace(/\s+/g, '_') // 3. replace spaces with underscores
+    .toLowerCase() // 4. convert to lowercase
+    .replace(/[^a-z0-9_]/g, '') // 5. replace invalid characters with an underscore
+  )
+  // add an underscore to the beginning if it starts with a number
+  if (tableName.match(/^[0-9]/)) {
+    tableName = `_${tableName}`;
+  }
+  return tableName;
 }
 
 
@@ -35,7 +47,7 @@ export async function insertCSVFileIntoDatabase(
   onProgress(0);
   const columns = csvFile.data.headers;
 
-  const tableName = createTableNameFromCSVFile(csvFile);
+  const tableName = generateTableNameFromCSVFile(csvFile.filename);
 
   await createDataset(db, csvFile.filename, tableName, columns, csvFile.size);
 
@@ -82,4 +94,9 @@ export function validateCSVFileData(data: CSVData): string | null {
     return `CSV file contains too many rows (max is ${MAX_ROWS})`;
   }
   return null;
+}
+
+export async function validateTableNameExists(db: PGLiteManager, tableName: string): Promise<boolean> {
+  const result = await db.query(`SELECT COUNT(*) FROM dataset WHERE table_name = '${tableName}'`);
+  return result.rows[0].count > 0;
 }

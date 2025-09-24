@@ -4,10 +4,9 @@ import { useState } from 'react';
 import CSVPreview from '@/components/csv-preview';
 import CSVUploader, { CSVFile } from '@/components/csv-uploader';
 import { ArrowRightIcon, Loader2 } from 'lucide-react';
-import { usePGLiteDB } from '@/lib/pglite-context';
 import { useRouter } from 'next/navigation';
-import { insertCSVFileIntoDatabase, validateCSVFile } from '@/services/csv-files';
 import { useInsertDatasetFromCSVFile } from '@/hooks/datasets';
+import { DatasetList } from '@/components/dataset-list';
 
 
 export default function Home() {
@@ -58,6 +57,9 @@ export default function Home() {
         )}
 
         {csvFile && <CSVPreview csvData={csvFile.data} />}
+
+        {!csvFile && <DatasetList />}
+
       </div>
     </div>
   );

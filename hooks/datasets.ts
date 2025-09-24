@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { usePGLiteDB } from "@/lib/pglite-context";
-import { getDatasetPaginated } from "@/services/chat";
+import { getDatasetDataPaginated, listDatasets } from "@/services/chat";
 import { CSVFile } from "@/components/csv-uploader";
-import { insertCSVFileIntoDatabase } from "@/services/csv-files";
+import { insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/csv-files";
 import { useState } from "react";
 
 
@@ -11,11 +11,22 @@ export const useDataset = (tableName: string, page: number) => {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dataset", tableName],
-    queryFn: async () => await getDatasetPaginated(db, tableName, page),
+    queryFn: async () => await getDatasetDataPaginated(db, tableName, page),
   });
 
   return { data, isLoading, isError };
 };
+
+
+export const useDatasets = () => {
+  const { db } = usePGLiteDB();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["datasets"],
+    queryFn: async () => await listDatasets(db),
+  });
+
+  return { data, isLoading, isError };
+}
 
 
 export const useInsertDatasetFromCSVFile = () => {
@@ -38,4 +49,13 @@ export const useInsertDatasetFromCSVFile = () => {
   };
 
   return { progress, execute, error, isProcessing };
+};
+
+
+export const useValidateTableNameExists = () => {
+  const { db } = usePGLiteDB();
+  const execute = async (tableName: string): Promise<boolean> => {
+    return await validateTableNameExists(db, tableName);
+  };
+  return { execute };
 };
