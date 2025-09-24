@@ -65,23 +65,35 @@ export default function Home() {
 
 
 function UseCSVFileButton({ csvFile, onCancel }: { csvFile: CSVFile, onCancel: () => void }) {
-  const { mutateAsync: insertCSVFileIntoDatabase, isPending, error } = useInsertDatasetFromCSVFile();
+  const { isProcessing, progress, execute: insertCSVFileIntoDatabase, error } = useInsertDatasetFromCSVFile();
   const router = useRouter();
 
   const handleClick = async () => {
     const tableName = await insertCSVFileIntoDatabase(csvFile);
+    if (!tableName) {
+      return;
+    }
     router.push(`/${tableName}`);
   }
 
-  if (isPending) {
+  if (isProcessing) {
     return <div className="flex items-center gap-2">
+      <p className="text-sm text-green-700">{progress}%</p>
       <Loader2 className="h-5 w-5 text-green-700 animate-spin" />
       <p className="text-sm text-green-700">Processing file...</p>
     </div>;
   }
 
   if (error) {
-    return <ErrorState error={error.message} />;
+    return <ErrorState error={error} />;
+  }
+
+  if (progress === 100) {
+    return (
+      <div className="flex items-center gap-2">
+        <p className="text-sm text-green-700">File processed successfully</p>
+      </div>
+    )
   }
 
   return (

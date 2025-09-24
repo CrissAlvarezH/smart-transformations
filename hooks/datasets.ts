@@ -3,6 +3,7 @@ import { usePGLiteDB } from "@/lib/pglite-context";
 import { getDatasetPaginated } from "@/services/chat";
 import { CSVFile } from "@/components/csv-uploader";
 import { insertCSVFileIntoDatabase } from "@/services/csv-files";
+import { useState } from "react";
 
 
 export const useDataset = (tableName: string, page: number) => {
@@ -16,12 +17,25 @@ export const useDataset = (tableName: string, page: number) => {
   return { data, isLoading, isError };
 };
 
+
 export const useInsertDatasetFromCSVFile = () => {
   const { db } = usePGLiteDB();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: async (csvFile: CSVFile) => await insertCSVFileIntoDatabase(db, csvFile),
-  });
+  const execute = async (csvFile: CSVFile): Promise<string | null> => {
+    try {
+      setIsProcessing(true);
+      const tableName = await insertCSVFileIntoDatabase(db, csvFile, setProgress);
+      setIsProcessing(false);
+      return tableName;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to insert dataset from CSV file');
+      setIsProcessing(false);
+      return null;
+    }
+  };
 
-  return { mutate, mutateAsync, isPending, error };
+  return { progress, execute, error, isProcessing };
 };
