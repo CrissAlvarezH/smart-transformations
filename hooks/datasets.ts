@@ -1,20 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePGLiteDB } from "@/lib/pglite-context";
-import { getDatasetDataPaginated, listDatasets } from "@/services/chat";
+import { getDatasetDataPaginated, listDatasets } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
-import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/csv-files";
+import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/datasets";
 import { useState } from "react";
 
 
 export const useDataset = (tableName: string, page: number) => {
   const { db } = usePGLiteDB();
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["dataset", tableName],
+  const { data, isLoading, isFetching, isPending, isError } = useQuery({
+    queryKey: ["dataset", tableName, page],
     queryFn: async () => await getDatasetDataPaginated(db, tableName, page),
+    placeholderData: keepPreviousData,
   });
 
-  return { data, isLoading, isError };
+  return { data, isLoading, isFetching, isPending, isError };
 };
 
 

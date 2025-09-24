@@ -96,3 +96,19 @@ body {
 .custom-scrollbar-dark::-webkit-scrollbar-corner {
   background: #111827;
 }
+
+/* Progress Bar Indeterminate Animation */
+@keyframes indeterminate {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-indeterminate {
+  background-image: linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: indeterminate 2s linear infinite;
+}

@@ -2,14 +2,6 @@ import PGLiteManager from "@/lib/pglite";
 import { UIMessage } from "ai";
 
 
-export async function getDatasetDataPaginated(db: PGLiteManager, tableName: string, page: number) {
-  return await db.query(`SELECT * FROM ${tableName} LIMIT 50 OFFSET ${(page - 1) * 100}`);
-}
-
-export async function listDatasets(db: PGLiteManager) {
-  return await db.query(`SELECT * FROM dataset`);
-}
-
 export async function getMessages(db: PGLiteManager, tableName: string) {
   return await db.query(`SELECT * FROM message WHERE table_name = '${tableName}'`);
 }

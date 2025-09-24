@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import Papa from 'papaparse';
 import { CSVIcon } from '@/components/Icons';
-import { generateTableNameFromCSVFile, validateCSVFileData, validateTableNameExists } from '@/services/csv-files';
+import { generateTableNameFromCSVFile, validateCSVFileData, validateTableNameExists } from '@/services/datasets';
 import { useValidateTableNameExists } from '@/hooks/datasets';
 
 export interface CSVFile {

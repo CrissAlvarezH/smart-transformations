@@ -2,6 +2,26 @@ import { CSVData, CSVFile } from "@/components/csv-uploader";
 import PGLiteManager from "@/lib/pglite";
 
 
+export async function getDatasetDataPaginated(db: PGLiteManager, tableName: string, page: number): Promise<{ data: any, total: number }> {
+  const pageSize = 50;
+  const [data, total] = await Promise.all([
+    db.query(`SELECT * FROM ${tableName} LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`),
+    db.query(`SELECT COUNT(*) FROM ${tableName}`)
+  ]);
+
+  const totalRows = total.rows[0].count;
+  const totalPages = Math.ceil(totalRows / pageSize);
+
+  return {
+    data,
+    total: totalPages
+  };
+}
+
+export async function listDatasets(db: PGLiteManager) {
+  return await db.query(`SELECT * FROM dataset`);
+}
+
 export async function createDataset(
   db: PGLiteManager,
   filename: string,
