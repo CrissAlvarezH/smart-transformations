@@ -2,6 +2,26 @@ import { CSVFile } from "@/components/csv-uploader";
 import PGLiteManager from "@/lib/pglite";
 
 
+export async function createDataset(
+  db: PGLiteManager,
+  filename: string,
+  tableName: string,
+  columns: string[],
+  size: number
+) {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ${tableName} (
+      ${columns.map((column) => `${column} TEXT NOT NULL`).join(', ')}
+    )
+  `);
+
+  await db.query(`
+    INSERT INTO dataset (table_name, filename, size, created_at, updated_at)
+    VALUES ('${tableName}', '${filename}', ${size}, NOW(), NOW())
+  `);
+}
+
+
 export function createTableNameFromCSVFile(csvFile: CSVFile) {
   return csvFile.filename.replace('.csv', '').replace(/\s+/g, '_').toLowerCase().replace(/[^a-z0-9_]/g, '');
 }
@@ -12,11 +32,7 @@ export async function insertCSVFileIntoDatabase(db: PGLiteManager, csvFile: CSVF
 
   const tableName = createTableNameFromCSVFile(csvFile);
 
-  await db.query(`
-      CREATE TABLE IF NOT EXISTS ${tableName} (
-        ${columns.map((column) => `${column} TEXT NOT NULL`).join(', ')}
-      )
-  `);
+  await createDataset(db, csvFile.filename, tableName, columns, csvFile.size);
 
   // TODO insert all the data but in this way it is to slow so we need to use a better way to insert the data
   // maybe using web workers, and make the inserts by batches
@@ -26,7 +42,7 @@ export async function insertCSVFileIntoDatabase(db: PGLiteManager, csvFile: CSVF
         INSERT INTO ${tableName} 
           (${columns.join(', ')}) 
         VALUES (${columns.map((_, index) => `$${index + 1}`).join(', ')})
-      `, 
+      `,
       row
     );
   }

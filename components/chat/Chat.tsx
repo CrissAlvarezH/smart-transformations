@@ -1,14 +1,24 @@
 "use client";
 
 import { useChat, UIMessage } from '@ai-sdk/react';
+import { generateId } from 'ai';
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUpIcon, Loader2 } from 'lucide-react';
 import { EmptyState } from './empty-state';
 import { ChatMessage } from './chat-message';
+import { useSaveMessage } from '@/hooks/messages';
 
 
-export function Chat() {
-  const { messages, sendMessage, status } = useChat()
+export function Chat({ tableName, initialMessages }: { tableName: string, initialMessages: UIMessage[] }) {
+  const { mutateAsync: saveMessage } = useSaveMessage(tableName);
+
+  const { messages, sendMessage, status } = useChat({
+    id: tableName,
+    messages: initialMessages,
+    onFinish: async ({ message }) => {
+      await saveMessage(message);
+    }
+  })
 
   const [input, setInput] = useState('');
 
@@ -20,6 +30,11 @@ export function Chat() {
     e.preventDefault();
     if (input.trim()) {
       sendMessage({ text: input.trim() });
+      saveMessage({ 
+        id: generateId(),
+        role: 'user', 
+        parts: [{ type: 'text', text: input.trim() }], 
+      });
       setInput('');
     }
   };

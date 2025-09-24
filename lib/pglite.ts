@@ -23,6 +23,7 @@ class PGLiteManager {
   static getInstance(dbName?: string): PGLiteManager {
     if (!PGLiteManager.instance) {
       PGLiteManager.instance = new PGLiteManager(dbName);
+      PGLiteManager.instance.getDb(); // initialize the database
     }
     return PGLiteManager.instance;
   }
@@ -41,7 +42,9 @@ class PGLiteManager {
 
         // Wait for the database to be ready
         await this.db.waitReady;
-        
+
+        await runMigrations();
+
         console.log(`PGLite database '${this.dbName}' initialized with IndexedDB persistence`);
       } catch (error) {
         console.error('Failed to initialize PGlite database:', error);
@@ -53,10 +56,10 @@ class PGLiteManager {
 
   async query<T = any>(sql: string, params?: any[]): Promise<QueryResult<T>> {
     const db = await this.getDb();
-    
+
     try {
       const result = await db.query(sql, params);
-      
+
       return {
         rows: result.rows as T[],
         rowCount: result.affectedRows || result.rows?.length || 0,
@@ -74,11 +77,11 @@ class PGLiteManager {
    */
   async transaction(queries: Array<{ sql: string; params?: any[] }>): Promise<QueryResult[]> {
     const db = await this.getDb();
-    
+
     try {
       return await db.transaction(async (tx) => {
         const results: QueryResult[] = [];
-        
+
         for (const query of queries) {
           const result = await tx.query(query.sql, query.params);
           results.push({
@@ -88,7 +91,7 @@ class PGLiteManager {
             command: query.sql.trim().split(/\s+/)[0].toUpperCase()
           });
         }
-        
+
         return results;
       });
     } catch (error) {
@@ -116,7 +119,7 @@ class PGLiteManager {
       FROM information_schema.tables 
       WHERE table_schema = 'public'
     `);
-    
+
     return result.rows.map((row: any) => row.table_name);
   }
 
@@ -134,6 +137,50 @@ class PGLiteManager {
     }
     PGLiteManager.instance = null;
   }
+}
+
+
+export interface DatasetTable {
+  table_name: string;
+  filename: string;
+  size: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MessageTable {
+  id: string;
+  role: string;
+  metadata: any;
+  parts: any;
+  table_name: string;
+}
+
+export async function runMigrations() {
+  const dbmaanager = PGLiteManager.getInstance();
+  const db = await dbmaanager.getDb();
+
+  // create Chat table
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS dataset (
+      table_name TEXT NOT NULL PRIMARY KEY,
+      filename TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      created_at TIMESTAMP NOT NULL,
+      updated_at TIMESTAMP NOT NULL
+    )
+  `);
+
+  // create messages table
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS message (
+      id TEXT PRIMARY KEY,
+      role TEXT NOT NULL,
+      metadata JSONB NOT NULL,
+      parts JSONB NOT NULL,
+      table_name TEXT NOT NULL REFERENCES dataset(table_name) ON DELETE CASCADE
+    )
+  `);
 }
 
 export default PGLiteManager;
