@@ -5,7 +5,13 @@ import PGLiteManager from "@/lib/pglite";
 export async function getDatasetDataPaginated(db: PGLiteManager, tableName: string, page: number): Promise<{ data: any, total: number }> {
   const pageSize = 50;
   const [data, total] = await Promise.all([
-    db.query(`SELECT * FROM ${tableName} LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`),
+    db.query(`
+      SELECT * 
+      FROM ${tableName} 
+      ORDER BY ___index___ ASC 
+      LIMIT ${pageSize} 
+      OFFSET ${(page - 1) * pageSize}
+    `),
     db.query(`SELECT COUNT(*) FROM ${tableName}`)
   ]);
 
@@ -31,6 +37,7 @@ export async function createDataset(
 ) {
   await db.query(`
     CREATE TABLE IF NOT EXISTS ${tableName} (
+      ___index___ SERIAL PRIMARY KEY, -- this is used internally to maintain the order and show in the dataset table
       ${columns.map((column) => `${column} TEXT NOT NULL`).join(', ')}
     )
   `);

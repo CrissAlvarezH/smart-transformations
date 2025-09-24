@@ -64,7 +64,7 @@ export default function CSVTable({ csvData}: CSVTableProps) {
             <th className="h-8 bg-gray-50 border border-gray-300 sticky left-0 z-10" style={{ width: 48 }}>
               
             </th>
-            {csvData.headers.map((header, index) => (
+            {csvData.headers.slice(1).map((header, index) => ( // slice(1) to skip the row number column (column ___index___)
               <th
                 key={index}
                 className="h-8 bg-gray-50 border border-gray-300 text-xs font-medium text-gray-700 text-left px-2 py-1 relative"
@@ -93,9 +93,9 @@ export default function CSVTable({ csvData}: CSVTableProps) {
             <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50/30"}>
               {/* Row number */}
               <td className="h-6 bg-gray-100 border border-gray-300 text-xs font-medium text-gray-600 text-center sticky left-0 z-10" style={{ width: 48 }}>
-                {rowIndex + 1}
+                {row[0]} {/* row[0] is the row number (column ___index___) */}
               </td>
-              {row.map((cell, cellIndex) => (
+              {row.slice(1).map((cell, cellIndex) => (
                 <td
                   key={cellIndex}
                   className="h-6 border border-gray-300 text-xs text-gray-900 px-2 py-1 hover:bg-blue-50 focus:bg-blue-100 cursor-cell"
