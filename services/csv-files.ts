@@ -100,3 +100,9 @@ export async function validateTableNameExists(db: PGLiteManager, tableName: stri
   const result = await db.query(`SELECT COUNT(*) FROM dataset WHERE table_name = '${tableName}'`);
   return result.rows[0].count > 0;
 }
+
+export async function deleteDataset(db: PGLiteManager, tableName: string) {
+  await db.query(`DELETE FROM message WHERE table_name = '${tableName}'`);
+  await db.query(`DELETE FROM dataset WHERE table_name = '${tableName}'`);
+  await db.query(`DROP TABLE IF EXISTS ${tableName}`);
+}

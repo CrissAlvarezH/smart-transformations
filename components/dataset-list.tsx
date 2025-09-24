@@ -1,12 +1,16 @@
 "use client";
 
-import { useDatasets } from "@/hooks/datasets";
+import { useDatasets, useDeleteDataset } from "@/hooks/datasets";
 import { DatasetTable } from "@/lib/pglite";
 import Link from "next/link";
-import { FileText, Database, Calendar, HardDrive, Loader2 } from "lucide-react";
+import { FileText, Database, Calendar, HardDrive, Loader2, Trash } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/dialog";
+import { useState } from "react";
+
 
 export function DatasetList() {
   const { data, isLoading, isError } = useDatasets();
+  const [datasetToDelete, setDatasetToDelete] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -31,13 +35,8 @@ export function DatasetList() {
   }
 
   if (!data || data.rows.length === 0) {
-    return (
-      <div className="text-center p-8 bg-gray-50 border border-gray-200 rounded-lg">
-        <Database className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No datasets found</h3>
-        <p className="text-gray-600">Upload a CSV file to get started with your first dataset.</p>
-      </div>
-    );
+    // TODO give the option to a uset to use a predefine dataset
+    return null;
   }
 
   const datasets = data.rows as DatasetTable[];
@@ -67,19 +66,29 @@ export function DatasetList() {
         <span className="text-sm text-gray-500">{datasets.length} dataset{datasets.length !== 1 ? 's' : ''}</span>
       </div>
 
+      {datasetToDelete && (
+        <DeleteDatasetButton datasetToDelete={datasetToDelete} setDatasetToDelete={setDatasetToDelete} />
+      )}
+
       <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
         {datasets.map((dataset) => (
           <div
             key={dataset.table_name}
             className="group block"
           >
-            <div className="bg-white border border-gray-300 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200 group-hover:scale-[1.01]">
+            <div className="bg-white border border-gray-300 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200">
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-medium text-lg text-gray-900 truncate" title={dataset.filename}>
-                    {dataset.filename}
-                  </h3>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-medium text-lg text-gray-900 truncate" title={dataset.filename}>
+                      {dataset.filename}
+                    </h3>
+                  </div>
+
+                  <button className="text-gray-400 hover:text-gray-900 cursor-pointer" onClick={() => setDatasetToDelete(dataset.table_name)}>
+                    <Trash className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
 
@@ -121,5 +130,39 @@ export function DatasetList() {
         ))}
       </div>
     </div>
+  );
+}
+
+
+function DeleteDatasetButton({ datasetToDelete, setDatasetToDelete }: { datasetToDelete: string | null, setDatasetToDelete: (datasetToDelete: string | null) => void }) {
+  const { mutateAsync: deleteDataset, isPending, error } = useDeleteDataset();
+
+  const handleClick = async () => {
+    if (datasetToDelete) {
+      await deleteDataset(datasetToDelete);
+      setDatasetToDelete(null);
+    }
+  };
+
+  return (
+    <Dialog open={datasetToDelete !== null} onOpenChange={(open) => setDatasetToDelete(open ? datasetToDelete : null)}>
+      <DialogContent className="bg-white">
+        <p className="text-gray-900">Are you sure you want to delete <span className="font-bold">{datasetToDelete}</span> dataset?</p>
+
+        {error && <p className="text-red-700">{error.message}</p>}
+
+        <div className="flex items-center justify-end gap-2">
+          <button className="bg-gray-100 text-gray-600 text-sm px-4 py-2 rounded-md cursor-pointer" onClick={() => setDatasetToDelete(null)}>Cancel</button>
+
+          <button
+            className="bg-red-100 hover:bg-red-200 flex items-center gap-2 transition-all duration-200 text-red-700 text-sm px-4 py-2 rounded-md cursor-pointer"
+            onClick={handleClick}
+          >
+            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Delete
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

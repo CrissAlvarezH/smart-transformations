@@ -1,8 +1,8 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePGLiteDB } from "@/lib/pglite-context";
 import { getDatasetDataPaginated, listDatasets } from "@/services/chat";
 import { CSVFile } from "@/components/csv-uploader";
-import { insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/csv-files";
+import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/csv-files";
 import { useState } from "react";
 
 
@@ -30,6 +30,7 @@ export const useDatasets = () => {
 
 
 export const useInsertDatasetFromCSVFile = () => {
+  const queryClient = useQueryClient();
   const { db } = usePGLiteDB();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -40,6 +41,7 @@ export const useInsertDatasetFromCSVFile = () => {
       setIsProcessing(true);
       const tableName = await insertCSVFileIntoDatabase(db, csvFile, setProgress);
       setIsProcessing(false);
+      queryClient.invalidateQueries({ queryKey: ["datasets"] });
       return tableName;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to insert dataset from CSV file');
@@ -58,4 +60,17 @@ export const useValidateTableNameExists = () => {
     return await validateTableNameExists(db, tableName);
   };
   return { execute };
+};
+
+export const useDeleteDataset = () => {
+  const { db } = usePGLiteDB();
+  const queryClient = useQueryClient();
+
+  const { mutate, mutateAsync, isPending, error } = useMutation({
+    mutationFn: async (tableName: string) => await deleteDataset(db, tableName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["datasets"] });
+    }
+  });
+  return { mutate, mutateAsync, isPending, error };
 };
