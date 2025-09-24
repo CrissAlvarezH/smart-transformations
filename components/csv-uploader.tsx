@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import Papa from 'papaparse';
 import { CSVIcon } from '@/components/Icons';
+import { validateCSVFileData } from '@/services/csv-files';
 
 export interface CSVFile {
   filename: string;
@@ -62,11 +63,17 @@ export default function CSVUploader({ onFileUploaded, onError }: CSVUploaderProp
     try {
       const text = await selectedFile.text();
       const data = parseCSV(text);
+      const error = validateCSVFileData(data);
+      if (error) {
+        onError(error);
+        return;
+      }
       onFileUploaded({
         filename: selectedFile.name,
         size: selectedFile.size,
         data
       });
+
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Failed to parse CSV file');
     } finally {

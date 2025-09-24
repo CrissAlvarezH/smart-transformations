@@ -3,7 +3,7 @@ import { UIMessage } from "ai";
 
 
 export async function getDatasetPaginated(db: PGLiteManager, tableName: string, page: number) {
-  return await db.query(`SELECT * FROM ${tableName} LIMIT 50 OFFSET ${page * 100}`);
+  return await db.query(`SELECT * FROM ${tableName} LIMIT 50 OFFSET ${(page - 1) * 100}`);
 }
 
 export async function getMessages(db: PGLiteManager, tableName: string) {

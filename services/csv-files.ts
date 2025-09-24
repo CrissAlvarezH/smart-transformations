@@ -1,4 +1,4 @@
-import { CSVFile } from "@/components/csv-uploader";
+import { CSVData, CSVFile } from "@/components/csv-uploader";
 import PGLiteManager from "@/lib/pglite";
 
 
@@ -34,8 +34,6 @@ export async function insertCSVFileIntoDatabase(db: PGLiteManager, csvFile: CSVF
 
   await createDataset(db, csvFile.filename, tableName, columns, csvFile.size);
 
-  // TODO insert all the data but in this way it is to slow so we need to use a better way to insert the data
-  // maybe using web workers, and make the inserts by batches
   const first100Rows = csvFile.data.rows.slice(0, 1000);
   for (const row of first100Rows) {
     await db.query(`
@@ -48,4 +46,19 @@ export async function insertCSVFileIntoDatabase(db: PGLiteManager, csvFile: CSVF
   }
 
   return tableName;
+}
+
+export function validateCSVFileData(data: CSVData): string | null {
+  const MAX_ROWS = 1000;
+
+  if (data.headers.length === 0) {
+    return "CSV file contains no headers";
+  }
+  if (data.rows.length === 0) {
+    return "CSV file contains no rows";
+  }
+  if (data.rows.length > MAX_ROWS) {
+    return `CSV file contains too many rows (max is ${MAX_ROWS})`;
+  }
+  return null;
 }
