@@ -25,16 +25,21 @@ export default function DatasetPage() {
         <Chat tableName={tableName} initialMessages={storedMessages || []} />
       </div>
 
-      <div className="flex-1 h-full overflow-auto bg-gray-100">
-
-        <div className="bg-white p-1 text-gray-900 flex items-center">
-          <CSVIcon className="h-5 w-5 text-gray-700 mx-2" />
-          <h1 className="text-gray-700">{tableName}</h1>
+      <div className="flex-1 h-full flex flex-col overflow-auto bg-gray-100">
+        <TableToolbar tableName={tableName} />
+        <div className="flex-1 overflow-auto bg-gray-100">
+          <Dataset tableName={tableName} />
         </div>
-
-        <Dataset tableName={tableName} />
-
       </div>
+    </div>
+  )
+}
+
+function TableToolbar({ tableName }: { tableName: string }) {
+  return (
+    <div className="bg-white p-1.5 text-gray-900 flex items-center shadow-sm z-20">
+      <CSVIcon className="h-5 w-5 text-gray-700 mx-2" />
+      <h1 className="text-gray-700">{tableName}</h1>
     </div>
   )
 }
