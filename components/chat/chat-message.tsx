@@ -65,6 +65,13 @@ function GenericToolPart({ part }: { part: any }) {
     'output-error': 'Error',
   }
   const label = labelTranslator[state];
+  const toolNameTranslator: Record<string, string> = {
+    'describe_dataset': 'Describing dataset',
+    'get_dataset_sample': 'Getting dataset sample',
+    'generate_transformation_sql': 'Generating tranformation',
+    'create_transformation': 'Applying transformation',
+  }
+  const toolNameTranslated = toolNameTranslator[toolName];
 
   return (
     <div className="py-2 w-full">
@@ -72,7 +79,7 @@ function GenericToolPart({ part }: { part: any }) {
         <div className="flex items-center gap-2">
           <Bolt className="w-4 h-4" />
           <div className="flex gap-2 items-center">
-            <span className="font-semibold text-xs text-gray-100">{toolName}</span>
+            <span className="font-semibold text-xs text-gray-100">{toolNameTranslated}</span>
 
             {state !== 'output-available' && <Loader2 className="w-3 h-3 animate-spin" />}
             {state !== 'output-available' && <span className="text-gray-400 text-xs">{label}</span>}
