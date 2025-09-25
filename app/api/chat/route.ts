@@ -1,18 +1,73 @@
 import { openai } from "@ai-sdk/openai";
-import { convertToModelMessages, streamText, UIMessage } from "ai";
+import { convertToModelMessages, streamText, UIMessage, tool, stepCountIs } from "ai";
+import { z } from "zod";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 
+const tools = {
+  describe_dataset: tool({
+    description: 'Describe the structure of the dataset.',
+    inputSchema: z.object({}),
+    outputSchema: z.object({
+      tableName: z.string(),
+      columns: z.array(z.object({
+        name: z.string(),
+        dataType: z.string(),
+      })),
+    }),
+  }),
+  get_dataset_sample: tool({
+    description: 'Get a sample of the dataset\'s records.',
+    inputSchema: z.object({}),
+    outputSchema: z.array(z.array(z.string()))
+      .describe('The sample of the dataset\'s records, the first array is the headers.'),
+  }),
+  generate_transformation_sql: tool({
+    description: 'Generate an SQL query to perform the requested transformation.',
+    inputSchema: z.object({
+      instructions: z.array(z.string()),
+      datasetSchema: z.object({
+        tableName: z.string(),
+        columns: z.array(z.object({
+          name: z.string(),
+          dataType: z.string(),
+        })),
+      }),
+    }),
+    execute: async ({ instructions, datasetSchema }) => {
+      console.log({ instructions, datasetSchema });
+      return `SELECT * FROM test WHERE`;
+    },
+  }),
+  create_transformation: tool({
+    description: 'Create a transformation in the database.',
+    inputSchema: z.object({
+      sql: z.string(),
+    }),
+  }),
+}
+
+
 export async function POST(req: Request) {
-    const { messages }: { messages: UIMessage[] } = await req.json();
-  
-    const result = streamText({
-      model: openai('gpt-4.1'),
-      system: 'You are a helpful assistant.',
-      messages: convertToModelMessages(messages),
-    });
-  
-    return result.toUIMessageStreamResponse();
-  }
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: openai('gpt-4.1'),
+    system: [
+      'You are an assistant whose role is to UNDERSTAND the user\'s intent regarding applying transformations to a table in pglite.',
+      '- Before starting, you will need to know the current structure of the table. For this, use the `describe_dataset` tool.',
+      '- If you need a sample of the dataset\'s records, you can use the`get_dataset_sample` tool.',
+      '- You can ask questions until you fully understand the transformation the user is describing.',
+      '- Once you understand the user\'s intent, use the`generate_transformation_sql` tool and provide it with a clear and concise instruction.This tool will generate an SQL query to perform the requested transformation.',
+      '- After calling `generate_transformation_sql`, you must call the `create_transformation` tool and pass it the generated SQL query.',
+      '- DO NOT SHOW THE SQL QUERY TO THE USER.',
+    ].join('\n'),
+    messages: convertToModelMessages(messages),
+    tools,
+    stopWhen: stepCountIs(10),
+  });
+
+return result.toUIMessageStreamResponse();
+}

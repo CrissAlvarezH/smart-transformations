@@ -174,11 +174,13 @@ export async function runMigrations() {
   // create messages table
   await db.query(`
     CREATE TABLE IF NOT EXISTS message (
-      id TEXT PRIMARY KEY,
+      id TEXT NOT NULL,
       role TEXT NOT NULL,
       metadata JSONB NOT NULL,
       parts JSONB NOT NULL,
-      table_name TEXT NOT NULL REFERENCES dataset(table_name) ON DELETE CASCADE
+      table_name TEXT NOT NULL REFERENCES dataset(table_name) ON DELETE CASCADE,
+      created_at TIMESTAMP NOT NULL,
+      PRIMARY KEY (id, table_name)
     )
   `);
 }

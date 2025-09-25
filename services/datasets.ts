@@ -2,8 +2,25 @@ import { CSVData, CSVFile } from "@/components/csv-uploader";
 import PGLiteManager from "@/lib/pglite";
 
 
-export async function getDatasetDataPaginated(db: PGLiteManager, tableName: string, page: number): Promise<{ data: any, total: number }> {
-  const pageSize = 50;
+export async function describeDatasetColumns(db: PGLiteManager, tableName: string): Promise<{ name: string, dataType: string }[]> {
+  // get name, columns and data types
+  const result = await db.query(`
+    SELECT 
+      column_name, 
+      data_type 
+    FROM information_schema.columns 
+    WHERE table_name = '${tableName}'
+  `);
+
+  return result.rows.map((row: any) => ({
+    name: row.column_name,
+    dataType: row.data_type
+  }));
+}
+
+export async function getDatasetDataPaginated(
+  db: PGLiteManager, tableName: string, page: number, pageSize: number = 50
+): Promise<{ data: any, total: number }> {
   const [data, total] = await Promise.all([
     db.query(`
       SELECT * 
@@ -48,7 +65,6 @@ export async function createDataset(
   `);
 }
 
-
 export function generateTableNameFromCSVFile(filename: string) {
   let tableName = (
     filename
@@ -64,7 +80,6 @@ export function generateTableNameFromCSVFile(filename: string) {
   }
   return tableName;
 }
-
 
 export async function insertCSVFileIntoDatabase(
   db: PGLiteManager,

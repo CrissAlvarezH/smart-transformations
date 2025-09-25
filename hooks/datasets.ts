@@ -69,7 +69,9 @@ export const useDeleteDataset = () => {
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
     mutationFn: async (tableName: string) => await deleteDataset(db, tableName),
-    onSuccess: () => {
+    onSuccess: (_, tableName) => {
+      console.log("deleteDataset", tableName);
+      queryClient.invalidateQueries({ queryKey: ["messages", tableName] }); // TODO validate this because the messages are remaining
       queryClient.invalidateQueries({ queryKey: ["datasets"] });
     }
   });

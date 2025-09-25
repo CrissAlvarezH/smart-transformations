@@ -19,8 +19,9 @@ export const useMessages = (tableName: string) => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["messages", tableName],
     queryFn: async () => {
-        const messages = await getMessages(db, tableName);
-        return messages.rows.map(mapToUIMessage);
+      const messages = await getMessages(db, tableName);
+      console.log("getMessages", tableName, messages);
+      return messages.rows.map(mapToUIMessage);
     }
   });
 
