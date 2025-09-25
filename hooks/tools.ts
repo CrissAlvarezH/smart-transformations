@@ -1,10 +1,12 @@
 import { usePGLiteDB } from "@/lib/pglite-context";
 import { ToolCall } from "@ai-sdk/provider-utils";
-import { describeDatasetColumns, getDatasetDataPaginated } from "@/services/datasets";
+import { createDatasetVersion, describeDatasetColumns, getDatasetDataPaginated } from "@/services/datasets";
+import { useQueryClient } from "@tanstack/react-query";
 
 
 export const useOnToolCall = (tableName: string) => {
   const { db } = usePGLiteDB();
+  const queryClient = useQueryClient();
 
   const onToolCall = async (toolCall: ToolCall<string, any>) => {
     if (toolCall.dynamic) return;
@@ -18,7 +20,7 @@ export const useOnToolCall = (tableName: string) => {
         };
 
       case 'get_dataset_sample':
-        const data = await getDatasetDataPaginated(db, tableName, 1, 10);
+        const data = await getDatasetDataPaginated(db, tableName, 1, 'latest', 10);
         // add the headers to the data
         const headers = data.data.fields.map((field: any) => field.name);
 
@@ -28,9 +30,9 @@ export const useOnToolCall = (tableName: string) => {
           data: data.data.map((row: any) => Object.values(row)),
         };
 
-      case 'generate_tranformation_sql':
-        break;
       case 'create_transformation':
+        await createDatasetVersion(db, toolCall.input.sql, tableName);
+        queryClient.invalidateQueries({ queryKey: ["dataset", tableName] });
         break;
     }
   };

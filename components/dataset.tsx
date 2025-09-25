@@ -7,9 +7,9 @@ import { ArrowLeftIcon, ArrowRightIcon, Loader2 } from "lucide-react";
 
 export function Dataset({ tableName }: { tableName: string }) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isFetching, isPending, isError } = useDataset(tableName, page);
+  const { data, isLoading, isFetching, isPending, error } = useDataset(tableName, page);
 
-  if (isError) return <div>Error: {isError}</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   const convertToCSVData = (data: any) => {
     return {

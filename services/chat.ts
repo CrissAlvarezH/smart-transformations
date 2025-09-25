@@ -3,7 +3,7 @@ import { UIMessage } from "ai";
 
 
 export async function getMessages(db: PGLiteManager, tableName: string) {
-  return await db.query(`SELECT * FROM message WHERE table_name = '${tableName}' ORDER BY created_at ASC`);
+  return await db.query(`SELECT * FROM messages WHERE table_name = '${tableName}' ORDER BY created_at ASC`);
 }
 
 export async function saveMessage(db: PGLiteManager, tableName: string, message: UIMessage) {
@@ -12,7 +12,7 @@ export async function saveMessage(db: PGLiteManager, tableName: string, message:
 
   // Single upsert query using ON CONFLICT
   const result = await db.query(`
-    INSERT INTO message 
+    INSERT INTO messages 
         (id, role, metadata, parts, table_name, created_at) 
     VALUES 
         ($1, $2, $3::jsonb, $4::jsonb, $5, NOW())

@@ -1,5 +1,6 @@
 
 import { PGlite } from '@electric-sql/pglite';
+import { PGliteWorker } from '@electric-sql/pglite/worker';
 
 interface QueryResult<T = any> {
   rows: T[];
@@ -28,19 +29,46 @@ class PGLiteManager {
     return PGLiteManager.instance;
   }
 
+  static async initPGLite(dbName: string) {
+    if (typeof window === 'undefined') {
+      throw new Error('PGlite instances are only available in the browser')
+    }
+    const db = new PGlite(`idb://${dbName}`)
+    return db;
+  }
+
+  static async initPGLiteWigdthWorker(dbName: string) {
+    if (typeof window === 'undefined') {
+      throw new Error('PGlite worker instances are only available in the browser')
+    }
+
+    const db = await PGliteWorker.create(
+      // Note the below syntax is required by webpack in order to
+      // identify the worker properly during static analysis
+      // see: https://webpack.js.org/guides/web-workers/
+      new Worker(new URL("./worker.ts", import.meta.url), { type: "module" }),
+      {
+        dataDir: `idb://${dbName}`,
+        meta: { origin: window.location.origin },
+      }
+    )
+    return db;
+  }
+
   /**
    * Initialize or get existing database instance with IndexedDB persistence
    */
   async getDb(): Promise<PGlite> {
     if (!this.db) {
       try {
-        // Use IndexedDB for persistence - PGlite automatically persists to IndexedDB
-        // when you provide a database path that starts with 'idb://'
-        this.db = new PGlite(`idb://${this.dbName}`, {
-          // Optional: Configure extensions or other options here
-        });
+        // TODO find the way to make the worker works, it is falling with the folowing errors:
+        // typeerror: failed to execute 'fetch' on 'workerglobalscope': failed to parse url from /_next/static/media/pglite.d82a094e.data
+        this.db = await PGLiteManager.initPGLite(this.dbName);
 
-        // Wait for the database to be ready
+        if (!this.db) {
+          throw new Error('Failed to create PGliteWorker');
+        }
+
         await this.db.waitReady;
 
         await runMigrations();
@@ -58,6 +86,8 @@ class PGLiteManager {
     const db = await this.getDb();
 
     try {
+      console.log("query", sql, params);
+
       const result = await db.query(sql, params);
 
       return {
@@ -157,13 +187,15 @@ export interface MessageTable {
 }
 
 export async function runMigrations() {
+  console.log('Running migrations...');
   const dbmaanager = PGLiteManager.getInstance();
   const db = await dbmaanager.getDb();
 
-  // create Chat table
+  // create datasets table
   await db.query(`
-    CREATE TABLE IF NOT EXISTS dataset (
+    CREATE TABLE IF NOT EXISTS datasets (
       table_name TEXT NOT NULL PRIMARY KEY,
+      columns JSONB NOT NULL,
       filename TEXT NOT NULL,
       size INTEGER NOT NULL,
       created_at TIMESTAMP NOT NULL,
@@ -171,14 +203,25 @@ export async function runMigrations() {
     )
   `);
 
+  // create dataset versions table (dataset after apply each transformation)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS dataset_versions (
+      table_name TEXT NOT NULL PRIMARY KEY,
+      columns JSONB NOT NULL,
+      version INTEGER NOT NULL,
+      original_table_name TEXT NOT NULL REFERENCES datasets(table_name) ON DELETE CASCADE,
+      created_at TIMESTAMP NOT NULL
+    )
+  `);
+
   // create messages table
   await db.query(`
-    CREATE TABLE IF NOT EXISTS message (
+    CREATE TABLE IF NOT EXISTS messages (
       id TEXT NOT NULL,
       role TEXT NOT NULL,
       metadata JSONB NOT NULL,
       parts JSONB NOT NULL,
-      table_name TEXT NOT NULL REFERENCES dataset(table_name) ON DELETE CASCADE,
+      table_name TEXT NOT NULL REFERENCES datasets(table_name) ON DELETE CASCADE,
       created_at TIMESTAMP NOT NULL,
       PRIMARY KEY (id, table_name)
     )

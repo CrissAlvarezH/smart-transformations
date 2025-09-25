@@ -1,21 +1,21 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePGLiteDB } from "@/lib/pglite-context";
-import { getDatasetDataPaginated, listDatasets } from "@/services/datasets";
+import { createDatasetVersion, getDatasetDataPaginated, listDatasets } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
 import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/datasets";
 import { useState } from "react";
 
 
-export const useDataset = (tableName: string, page: number) => {
+export const useDataset = (tableName: string, page: number, version: string = 'latest') => {
   const { db } = usePGLiteDB();
 
-  const { data, isLoading, isFetching, isPending, isError } = useQuery({
+  const { data, isLoading, isFetching, isPending, error } = useQuery({
     queryKey: ["dataset", tableName, page],
-    queryFn: async () => await getDatasetDataPaginated(db, tableName, page),
+    queryFn: async () => await getDatasetDataPaginated(db, tableName, page, version),
     placeholderData: keepPreviousData,
   });
 
-  return { data, isLoading, isFetching, isPending, isError };
+  return { data, isLoading, isFetching, isPending, error };
 };
 
 
@@ -23,7 +23,10 @@ export const useDatasets = () => {
   const { db } = usePGLiteDB();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["datasets"],
-    queryFn: async () => await listDatasets(db),
+    queryFn: async () => {
+      console.log('Listing datasets...');
+      return await listDatasets(db);
+    }
   });
 
   return { data, isLoading, isError };
@@ -54,6 +57,18 @@ export const useInsertDatasetFromCSVFile = () => {
   return { progress, execute, error, isProcessing };
 };
 
+export const useCreateDatasetVersion = (originalTableName: string) => {
+  const { db } = usePGLiteDB();
+  const queryClient = useQueryClient();
+
+  const { mutateAsync, isPending, error } = useMutation({
+    mutationFn: async (tranformationSql: string) => await createDatasetVersion(db, tranformationSql, originalTableName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dataset", originalTableName] });
+    }
+  });
+  return { mutateAsync, isPending, error };
+};
 
 export const useValidateTableNameExists = () => {
   const { db } = usePGLiteDB();

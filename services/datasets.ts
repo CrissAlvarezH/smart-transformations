@@ -19,17 +19,53 @@ export async function describeDatasetColumns(db: PGLiteManager, tableName: strin
 }
 
 export async function getDatasetDataPaginated(
-  db: PGLiteManager, tableName: string, page: number, pageSize: number = 50
+  db: PGLiteManager, 
+  tableName: string,
+  page: number,
+  version: string = 'latest',
+  pageSize: number = 50
 ): Promise<{ data: any, total: number }> {
+  let versionTableName = tableName;
+  let columns = [];
+
+  if (version === 'latest') {
+    const result = await db.query(`
+      SELECT table_name, columns FROM dataset_versions 
+      WHERE original_table_name = '${tableName}' 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `);
+    if (result.rows.length === 0) {
+      throw new Error(`Do not exist any version of the dataset ${tableName}`);
+    }
+    versionTableName = result.rows[0] ? result.rows[0].table_name : tableName;
+    columns = result.rows[0] ? result.rows[0].columns : [];
+    console.log("latest version table name", versionTableName);
+
+  } else {
+    const result = await db.query(`
+      SELECT table_name, columns FROM dataset_versions 
+      WHERE table_name = '${versionTableName}'
+    `);
+    if (result.rows.length === 0) {
+      throw new Error(`Version ${version} not found of the dataset ${tableName}`);
+    }
+    versionTableName = result.rows[0].table_name;
+    columns = result.rows[0] ? result.rows[0].columns : [];
+  }
+
+  // put the __index__ column at the first position
+  columns = ['___index___', ...columns.filter((c: string) => c !== '___index___')];
+
   const [data, total] = await Promise.all([
     db.query(`
-      SELECT * 
-      FROM ${tableName} 
+      SELECT ${columns.join(', ')} 
+      FROM ${versionTableName} 
       ORDER BY ___index___ ASC 
       LIMIT ${pageSize} 
       OFFSET ${(page - 1) * pageSize}
     `),
-    db.query(`SELECT COUNT(*) FROM ${tableName}`)
+    db.query(`SELECT COUNT(*) FROM ${versionTableName}`)
   ]);
 
   const totalRows = total.rows[0].count;
@@ -42,7 +78,7 @@ export async function getDatasetDataPaginated(
 }
 
 export async function listDatasets(db: PGLiteManager) {
-  return await db.query(`SELECT * FROM dataset`);
+  return await db.query(`SELECT * FROM datasets`);
 }
 
 export async function createDataset(
@@ -60,9 +96,54 @@ export async function createDataset(
   `);
 
   await db.query(`
-    INSERT INTO dataset (table_name, filename, size, created_at, updated_at)
-    VALUES ('${tableName}', '${filename}', ${size}, NOW(), NOW())
+    INSERT INTO datasets (table_name, columns, filename, size, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, NOW(), NOW())
+  `, [tableName, columns, filename, size]);
+}
+
+export async function createDatasetVersion(
+  db: PGLiteManager,
+  tranformationSql: string,
+  originalTableName: string
+) {
+  // get the last version of the original table
+  const result = await db.query(`
+    SELECT version FROM dataset_versions 
+    WHERE original_table_name = '${originalTableName}' 
+    ORDER BY created_at DESC 
+    LIMIT 1
   `);
+  const lastVersionNumber = result.rows[0] ? result.rows[0].version : 1;
+  const newVersionNumber = lastVersionNumber + 1;
+
+  // create a subfix for the new version table name dificult to replicate with a filename
+  const newVersionTableName = `${originalTableName}___v${newVersionNumber}`;
+
+  // create the new version table using the transformation sql (the sql is a SELECT statement)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ${newVersionTableName} AS
+    ${tranformationSql}
+  `);
+
+  // reset the ___index___ column
+  await db.query(`
+    ALTER TABLE ${newVersionTableName} DROP COLUMN IF EXISTS ___index___
+  `);
+  await db.query(`
+    ALTER TABLE ${newVersionTableName} ADD COLUMN ___index___ SERIAL PRIMARY KEY
+  `);
+
+  const columns = await db.query(`
+    SELECT column_name 
+    FROM information_schema.columns 
+    WHERE table_name = '${newVersionTableName}'
+  `);
+  const columnNames = columns.rows.map((col: any) => col.column_name);
+
+  await db.query(`
+    INSERT INTO dataset_versions (table_name, columns, version, original_table_name, created_at)
+    VALUES ($1, $2, $3, $4, NOW())
+  `, [newVersionTableName, columnNames, newVersionNumber, originalTableName]);
 }
 
 export function generateTableNameFromCSVFile(filename: string) {
@@ -139,12 +220,12 @@ export function validateCSVFileData(data: CSVData): string | null {
 }
 
 export async function validateTableNameExists(db: PGLiteManager, tableName: string): Promise<boolean> {
-  const result = await db.query(`SELECT COUNT(*) FROM dataset WHERE table_name = '${tableName}'`);
+  const result = await db.query(`SELECT COUNT(*) FROM datasets WHERE table_name = '${tableName}'`);
   return result.rows[0].count > 0;
 }
 
 export async function deleteDataset(db: PGLiteManager, tableName: string) {
-  await db.query(`DELETE FROM message WHERE table_name = '${tableName}'`);
-  await db.query(`DELETE FROM dataset WHERE table_name = '${tableName}'`);
+  await db.query(`DELETE FROM messages WHERE table_name = '${tableName}'`);
+  await db.query(`DELETE FROM datasets WHERE table_name = '${tableName}'`);
   await db.query(`DROP TABLE IF EXISTS ${tableName}`);
 }
