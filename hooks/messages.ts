@@ -20,7 +20,6 @@ export const useMessages = (tableName: string) => {
     queryKey: ["messages", tableName],
     queryFn: async () => {
       const messages = await getMessages(db, tableName);
-      console.log("getMessages", tableName, messages);
       return messages.rows.map(mapToUIMessage);
     }
   });

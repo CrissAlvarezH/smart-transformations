@@ -5,6 +5,7 @@ import { Chat } from "@/components/chat/chat";
 import { Dataset } from "@/components/dataset";
 import { useMessages } from "@/hooks/messages";
 
+export const dynamic = "force-dynamic";
 
 export default function DatasetPage() {
   const params = useParams();
