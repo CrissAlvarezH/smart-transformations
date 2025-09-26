@@ -18,40 +18,31 @@ export async function describeDatasetColumns(db: PGLiteManager, tableName: strin
   }));
 }
 
+
+export interface DatasetDataPaginated {
+  data: any;
+  total: number;
+  version: { tableName: string };
+}
+
 export async function getDatasetDataPaginated(
-  db: PGLiteManager, 
+  db: PGLiteManager,
   tableName: string,
   page: number,
   version: string = 'latest',
   pageSize: number = 50
-): Promise<{ data: any, total: number }> {
+): Promise<DatasetDataPaginated> {
   let versionTableName = tableName;
   let columns = [];
 
   if (version === 'latest') {
-    const result = await db.query(`
-      SELECT table_name, columns FROM dataset_versions 
-      WHERE original_table_name = '${tableName}' 
-      ORDER BY created_at DESC 
-      LIMIT 1
-    `);
-    if (result.rows.length === 0) {
-      throw new Error(`Do not exist any version of the dataset ${tableName}`);
-    }
-    versionTableName = result.rows[0] ? result.rows[0].table_name : tableName;
-    columns = result.rows[0] ? result.rows[0].columns : [];
-    console.log("latest version table name", versionTableName);
-
+    const schema = await getLastesDatasetVersionSchema(db, tableName);
+    versionTableName = schema.tableName;
+    columns = schema.columns;
   } else {
-    const result = await db.query(`
-      SELECT table_name, columns FROM dataset_versions 
-      WHERE table_name = '${versionTableName}'
-    `);
-    if (result.rows.length === 0) {
-      throw new Error(`Version ${version} not found of the dataset ${tableName}`);
-    }
-    versionTableName = result.rows[0].table_name;
-    columns = result.rows[0] ? result.rows[0].columns : [];
+    const schema = await getDatasetSchemaByVersion(db, tableName, version);
+    versionTableName = schema.tableName;
+    columns = schema.columns;
   }
 
   // put the __index__ column at the first position
@@ -73,9 +64,133 @@ export async function getDatasetDataPaginated(
 
   return {
     data,
-    total: totalPages
+    total: totalPages,
+    version: {
+      tableName: versionTableName,
+    },
   };
 }
+
+
+async function getDatasetSchemaByVersion(
+  db: PGLiteManager, tableName: string, version: string
+): Promise<{ tableName: string, columns: string[] }> {
+  const result = await db.query(`
+    SELECT table_name, columns FROM dataset_versions 
+    WHERE table_name = '${tableName}' AND version = '${version}'
+  `);
+
+  if (result.rows.length === 0) {
+    throw new Error(`Version ${version} not found of the dataset ${tableName}`);
+  }
+  const { table_name, columns } = result.rows[0];
+  const versionTableName = table_name;
+  const versionColumns = columns;
+
+  return {
+    tableName: versionTableName,
+    columns: versionColumns,
+  };
+}
+
+
+async function getLastesDatasetVersionSchema(
+  db: PGLiteManager, tableName: string
+): Promise<{ tableName: string, columns: string[] }> {
+  let versionTableName = tableName;
+  let columns = [];
+
+  const result = await db.query(`
+    SELECT table_name, columns FROM dataset_versions 
+    WHERE original_table_name = '${tableName}' 
+    ORDER BY created_at DESC 
+    LIMIT 1
+  `);
+
+  if (result.rows.length > 0) {
+    versionTableName = result.rows[0] ? result.rows[0].table_name : tableName;
+    columns = result.rows[0] ? result.rows[0].columns : [];
+
+  } else {
+    // use the original table name if there arent any versions
+    versionTableName = tableName;
+
+    const result = await db.query(`
+      SELECT columns FROM datasets 
+      WHERE table_name = '${tableName}'
+    `);
+    columns = result.rows[0] ? result.rows[0].columns : [];
+  }
+
+  return {
+    tableName: versionTableName,
+    columns,
+  };
+}
+
+
+export function mapPgDataTypeIdToName(dataTypeId: number): string {
+  const map: Record<string, string> = {
+    "16": "bool",
+    "17": "bytea",
+    "18": "char",
+    "19": "name",
+    "20": "int8",
+    "21": "int2",
+    "22": "int2vector",
+    "23": "int4",
+    "24": "regproc",
+    "25": "text",
+    "26": "oid",
+    "27": "tid",
+    "28": "xid",
+    "29": "cid",
+    "30": "oidvector",
+    "114": "json",
+    "142": "xml",
+    "194": "pg_node_tree",
+    "600": "point",
+    "601": "lseg",
+    "602": "path",
+    "603": "box",
+    "604": "polygon",
+    "628": "line",
+    "700": "float4",
+    "701": "float8",
+    "702": "abstime",
+    "703": "reltime",
+    "704": "tinterval",
+    "705": "unknown",
+    "718": "circle",
+    "774": "macaddr8",
+    "829": "macaddr",
+    "869": "inet",
+    "650": "cidr",
+    "1007": "int4[]",
+    "1009": "text[]",
+    "1015": "varchar[]",
+    "1016": "int8[]",
+    "1042": "bpchar",
+    "1043": "varchar",
+    "1082": "date",
+    "1083": "time",
+    "1114": "timestamp",
+    "1184": "timestamptz",
+    "1186": "interval",
+    "1266": "timetz",
+    "1700": "numeric",
+    "2278": "void",
+    "2950": "uuid",
+    "3614": "tsvector",
+    "3615": "tsquery",
+    "3734": "regconfig",
+    "3769": "regdictionary",
+    "3802": "jsonb"
+  }
+
+  return map[dataTypeId.toString()] || 'unknown';
+}
+
 
 export async function listDatasets(db: PGLiteManager) {
   return await db.query(`SELECT * FROM datasets`);
@@ -149,11 +264,11 @@ export async function createDatasetVersion(
 export function generateTableNameFromCSVFile(filename: string) {
   let tableName = (
     filename
-    .replace('.csv', '') // 1. remove .csv
-    .trim() // 2. remove trailing spaces
-    .replace(/\s+/g, '_') // 3. replace spaces with underscores
-    .toLowerCase() // 4. convert to lowercase
-    .replace(/[^a-z0-9_]/g, '') // 5. replace invalid characters with an underscore
+      .replace('.csv', '') // 1. remove .csv
+      .trim() // 2. remove trailing spaces
+      .replace(/\s+/g, '_') // 3. replace spaces with underscores
+      .toLowerCase() // 4. convert to lowercase
+      .replace(/[^a-z0-9_]/g, '') // 5. replace invalid characters with an underscore
   )
   // add an underscore to the beginning if it starts with a number
   if (tableName.match(/^[0-9]/)) {
@@ -182,7 +297,7 @@ export async function insertCSVFileIntoDatabase(
     onProgress(Math.round((batchPos + 1) / batchCount * 100));
 
     // Create multi-row VALUES clause
-    const valuesPlaceholders = batch.map((_, rowIndex) => 
+    const valuesPlaceholders = batch.map((_, rowIndex) =>
       `(${columns.map((_, colIndex) => `$${rowIndex * columns.length + colIndex + 1}`).join(', ')})`
     ).join(', ');
 
@@ -226,6 +341,11 @@ export async function validateTableNameExists(db: PGLiteManager, tableName: stri
 
 export async function deleteDataset(db: PGLiteManager, tableName: string) {
   await db.query(`DELETE FROM messages WHERE table_name = '${tableName}'`);
+  const versionTables = await db.query(`SELECT table_name FROM dataset_versions WHERE original_table_name = '${tableName}'`);
+  for (const versionTable of versionTables.rows) {
+    await db.query(`DROP TABLE IF EXISTS ${versionTable.table_name}`);
+  }
+  await db.query(`DELETE FROM dataset_versions WHERE original_table_name = '${tableName}'`);
   await db.query(`DELETE FROM datasets WHERE table_name = '${tableName}'`);
   await db.query(`DROP TABLE IF EXISTS ${tableName}`);
 }

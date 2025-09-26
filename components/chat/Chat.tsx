@@ -1,21 +1,51 @@
 "use client";
 
 import { useChat, UIMessage } from '@ai-sdk/react';
-import { generateId, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
+import { generateId, lastAssistantMessageIsCompleteWithToolCalls, DefaultChatTransport } from 'ai';
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUpIcon, Loader2 } from 'lucide-react';
 import { EmptyState } from './empty-state';
 import { ChatMessage } from './chat-message';
 import { useSaveMessage } from '@/hooks/messages';
 import { useOnToolCall } from '@/hooks/tools';
+import { useDataset, useDatasetContext } from '@/hooks/datasets';
 
 
 export function Chat({ tableName, initialMessages }: { tableName: string, initialMessages: UIMessage[] }) {
   const { mutateAsync: saveMessage } = useSaveMessage(tableName);
+  const { getDatasetContext } = useDatasetContext(tableName);
   const { onToolCall } = useOnToolCall(tableName);
 
   const { messages, sendMessage, status, addToolResult } = useChat({
     id: tableName,
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: async () => {
+        try {
+          const context = await getDatasetContext();
+
+          console.log('chat body context', context);
+
+          const columns = context?.columns.map((field: any) => ({ name: field.name, dataType: field.dataType }));
+
+          let parsedSample = context?.sample.map((row: any) => Object.values(row));
+          const headers = columns.map((column: any) => column.name);
+          parsedSample = [headers, ...parsedSample];
+
+          return {
+            datasetContext: {
+              tableName: context?.tableName,
+              versionTableName: context?.versionTableName,
+              columns: columns,
+              sample: parsedSample,
+            }
+          }
+        } catch (error) {
+          console.error('Error getting dataset sample', error);
+          throw error;
+        }
+      }
+    }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     messages: initialMessages,
     onFinish: async ({ message }) => {

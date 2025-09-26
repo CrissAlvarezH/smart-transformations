@@ -1,6 +1,6 @@
 import { usePGLiteDB } from "@/lib/pglite-context";
 import { ToolCall } from "@ai-sdk/provider-utils";
-import { createDatasetVersion, describeDatasetColumns, getDatasetDataPaginated } from "@/services/datasets";
+import { createDatasetVersion, getDatasetDataPaginated } from "@/services/datasets";
 import { useQueryClient } from "@tanstack/react-query";
 
 
@@ -12,13 +12,6 @@ export const useOnToolCall = (tableName: string) => {
     if (toolCall.dynamic) return;
 
     switch (toolCall.toolName) {
-      case 'describe_dataset':
-        const columns = await describeDatasetColumns(db, tableName);
-        return {
-          tableName,
-          columns,
-        };
-
       case 'get_dataset_sample':
         const data = await getDatasetDataPaginated(db, tableName, 1, 'latest', 10);
         // add the headers to the data
@@ -31,9 +24,17 @@ export const useOnToolCall = (tableName: string) => {
         };
 
       case 'create_transformation':
-        await createDatasetVersion(db, toolCall.input.sql, tableName);
+        try {
+          await createDatasetVersion(db, toolCall.input.sql, tableName);
+        } catch (error) {
+          console.error('Error creating transformation', error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to create transformation',
+          };
+        }
         queryClient.invalidateQueries({ queryKey: ["dataset", tableName] });
-        break;
+        return { success: true };
     }
   };
 

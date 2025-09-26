@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePGLiteDB } from "@/lib/pglite-context";
-import { createDatasetVersion, getDatasetDataPaginated, listDatasets } from "@/services/datasets";
+import { createDatasetVersion, getDatasetDataPaginated, listDatasets, mapPgDataTypeIdToName } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
 import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/datasets";
 import { useState } from "react";
@@ -19,12 +19,41 @@ export const useDataset = (tableName: string, page: number, version: string = 'l
 };
 
 
+export interface DatasetContext {
+  tableName: string;
+  versionTableName: string;
+  columns: { name: string, dataType: string }[];
+  sample: string[][];
+}
+
+export const useDatasetContext = (tableName: string) => {
+  const { db } = usePGLiteDB();
+
+  const getDatasetContext = async (): Promise<DatasetContext> => {
+    // get the dataset context for prompts, get dataset last version table name, columns and sample records
+    const data = await getDatasetDataPaginated(db, tableName, 1, 'latest', 10);
+
+    data.data.fields = data.data.fields.map((field: any) => ({
+      name: field.name,
+      dataType: mapPgDataTypeIdToName(field.dataTypeID)
+    }));
+
+    return {
+      tableName: data.data.table_name,
+      versionTableName: data.version.tableName,
+      columns: data.data.fields,
+      sample: data.data.rows,
+    };
+  }
+  return { getDatasetContext };
+};
+
+
 export const useDatasets = () => {
   const { db } = usePGLiteDB();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["datasets"],
     queryFn: async () => {
-      console.log('Listing datasets...');
       return await listDatasets(db);
     }
   });
