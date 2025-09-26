@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface CSVData {
   headers: string[];
@@ -13,8 +13,15 @@ export default function CSVTable({ csvData}: CSVTableProps) {
   const [columnWidths, setColumnWidths] = useState<number[]>(
     csvData.headers.map(() => 120) // Default width of 120px for each column
   );
+  const [tableWidth, setTableWidth] = useState(0);
   const [isResizing, setIsResizing] = useState(false);
   const [resizingColumn, setResizingColumn] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (csvData.headers.length === columnWidths.length) return;
+    setColumnWidths(csvData.headers.map(() => 120));
+    setTableWidth(csvData.headers.length * 120 + 48); // 48px for row numbers column
+  }, [csvData.headers]);
 
   const handleMouseDown = (columnIndex: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -56,7 +63,7 @@ export default function CSVTable({ csvData}: CSVTableProps) {
     >
       <table className="border-collapse" style={{ 
         tableLayout: 'fixed', 
-        width: columnWidths.reduce((sum, width) => sum + width, 48) // 48px for row numbers column
+        width: tableWidth // 48px for row numbers column
       }}>
         <thead>
           <tr>
@@ -100,10 +107,10 @@ export default function CSVTable({ csvData}: CSVTableProps) {
                   key={cellIndex}
                   className="h-6 border border-gray-300 text-xs text-gray-900 px-2 py-1 hover:bg-blue-50 focus:bg-blue-100 cursor-cell"
                   style={{ width: columnWidths[cellIndex] }}
-                  title={cell} // Show full content on hover
+                  title={cell.toString()} // Show full content on hover
                 >
                   <div className="truncate">
-                    {cell}
+                    {cell.toString()}
                   </div>
                 </td>
               ))}
