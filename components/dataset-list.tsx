@@ -4,7 +4,7 @@ import { useDatasets, useDeleteDataset } from "@/hooks/datasets";
 import { DatasetTable } from "@/lib/pglite";
 import Link from "next/link";
 import { FileText, Database, Calendar, HardDrive, Loader2, Trash } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 
 
@@ -147,6 +147,8 @@ function DeleteDatasetButton({ datasetToDelete, setDatasetToDelete }: { datasetT
   return (
     <Dialog open={datasetToDelete !== null} onOpenChange={(open) => setDatasetToDelete(open ? datasetToDelete : null)}>
       <DialogContent className="bg-white">
+        <DialogTitle>Delete Dataset</DialogTitle>
+
         <p className="text-gray-900">Are you sure you want to delete <span className="font-bold">{datasetToDelete}</span> dataset?</p>
 
         {error && <p className="text-red-700">{error.message}</p>}

@@ -24,8 +24,6 @@ export function Chat({ tableName, initialMessages }: { tableName: string, initia
         try {
           const context = await getDatasetContext();
 
-          console.log('chat body context', context);
-
           const columns = context?.columns.map((field: any) => ({ name: field.name, dataType: field.dataType }));
 
           let parsedSample = context?.sample.map((row: any) => Object.values(row));

@@ -52,7 +52,6 @@ const createTools = (datasetContext: RequestDatasetContext) => ({
         Please generate the sql query to perform the requested transformation.
       `
 
-      console.log("generate_transformation_sql", { systemPrompt, userPrompt });
       const result = await generateObject({
         model: openai('gpt-4.1'),
         system: systemPrompt,
@@ -95,7 +94,6 @@ interface ChatRequest {
 
 export async function POST(req: Request) {
   const { messages, datasetContext }: ChatRequest = await req.json();
-  console.log({ datasetContext });
 
   const systemPrompt = `
     You are an assistant whose role is to UNDERSTAND the user\'s intent regarding applying transformations to a table in pglite.
@@ -108,8 +106,6 @@ export async function POST(req: Request) {
     - After calling \`generate_transformation_sql\`, you must call the \`create_transformation\` tool and pass it the generated SQL query in the previeous step.
     - DO NOT SHOW THE SQL QUERY TO THE USER.
   `;
-
-  console.log({ systemPrompt });
 
   const result = streamText({
     model: openai('gpt-4.1'),

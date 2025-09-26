@@ -86,8 +86,6 @@ class PGLiteManager {
     const db = await this.getDb();
 
     try {
-      console.log("query", sql, params);
-
       const result = await db.query(sql, params);
 
       return {

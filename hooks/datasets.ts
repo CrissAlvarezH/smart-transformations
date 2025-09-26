@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePGLiteDB } from "@/lib/pglite-context";
-import { createDatasetVersion, getDatasetDataPaginated, listDatasets, mapPgDataTypeIdToName } from "@/services/datasets";
+import { createDatasetVersion, getDatasetDataPaginated, listDatasets, listDatasetVersions, mapPgDataTypeIdToName } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
 import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/datasets";
 import { useState } from "react";
@@ -17,6 +17,20 @@ export const useDataset = (tableName: string, page: number, version: string = 'l
 
   return { data, isLoading, isFetching, isPending, error };
 };
+
+
+export const useDatasetVersions = (tableName: string) => {
+  const { db } = usePGLiteDB();
+
+  const { data, isLoading, isFetching, isPending, error } = useQuery({
+    queryKey: ["dataset-versions", tableName],
+    queryFn: async () => {
+      return await listDatasetVersions(db, tableName);
+    }
+  });
+
+  return { data, isLoading, isFetching, isPending, error };
+}
 
 
 export interface DatasetContext {
@@ -86,18 +100,6 @@ export const useInsertDatasetFromCSVFile = () => {
   return { progress, execute, error, isProcessing };
 };
 
-export const useCreateDatasetVersion = (originalTableName: string) => {
-  const { db } = usePGLiteDB();
-  const queryClient = useQueryClient();
-
-  const { mutateAsync, isPending, error } = useMutation({
-    mutationFn: async (tranformationSql: string) => await createDatasetVersion(db, tranformationSql, originalTableName),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["dataset", originalTableName] });
-    }
-  });
-  return { mutateAsync, isPending, error };
-};
 
 export const useValidateTableNameExists = () => {
   const { db } = usePGLiteDB();
@@ -117,6 +119,7 @@ export const useDeleteDataset = () => {
       // Remove cached data completely instead of just invalidating
       queryClient.removeQueries({ queryKey: ["messages", tableName] });
       queryClient.removeQueries({ queryKey: ["dataset", tableName] });
+      queryClient.removeQueries({ queryKey: ["dataset-versions", tableName] });
       queryClient.invalidateQueries({ queryKey: ["datasets"] });
     }
   });

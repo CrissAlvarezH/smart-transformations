@@ -196,6 +196,21 @@ export async function listDatasets(db: PGLiteManager) {
   return await db.query(`SELECT * FROM datasets`);
 }
 
+
+export async function listDatasetVersions(db: PGLiteManager, tableName: string) {
+  const result = await db.query(`SELECT 
+      table_name, 
+      version, 
+      original_table_name, 
+      created_at 
+    FROM dataset_versions 
+    WHERE original_table_name = '${tableName}' 
+    ORDER BY created_at DESC
+  `);
+  return result;
+}
+
+
 export async function createDataset(
   db: PGLiteManager,
   filename: string,
@@ -228,7 +243,7 @@ export async function createDatasetVersion(
     ORDER BY created_at DESC 
     LIMIT 1
   `);
-  const lastVersionNumber = result.rows[0] ? result.rows[0].version : 1;
+  const lastVersionNumber = result.rows[0] ? result.rows[0].version : 0;
   const newVersionNumber = lastVersionNumber + 1;
 
   // create a subfix for the new version table name dificult to replicate with a filename
@@ -314,6 +329,10 @@ export async function insertCSVFileIntoDatabase(
     // sleep for 0.2 second
     await new Promise(resolve => setTimeout(resolve, 200));
   }
+
+  // insert this as the first version
+  await createDatasetVersion(db, `SELECT * FROM ${tableName}`, tableName);
+
   onProgress(100);
 
   return tableName;

@@ -97,7 +97,7 @@ export default function CSVTable({ csvData}: CSVTableProps) {
         </thead>
         <tbody>
           {csvData.rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50/30"}>
+            <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
               {/* Row number */}
               <td className="h-6 bg-gray-100 border border-gray-300 text-xs font-medium text-gray-600 text-center sticky left-0 z-10" style={{ width: 48 }}>
                 {row[0]} {/* row[0] is the row number (column ___index___) */}

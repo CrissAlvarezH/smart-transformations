@@ -34,6 +34,7 @@ export const useOnToolCall = (tableName: string) => {
           };
         }
         queryClient.invalidateQueries({ queryKey: ["dataset", tableName] });
+        queryClient.invalidateQueries({ queryKey: ["dataset-versions", tableName] });
         return { success: true };
     }
   };
