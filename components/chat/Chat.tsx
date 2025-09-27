@@ -8,7 +8,7 @@ import { EmptyState } from './empty-state';
 import { ChatMessage } from './chat-message';
 import { useSaveMessage } from '@/hooks/messages';
 import { useOnToolCall } from '@/hooks/tools';
-import { useDataset, useDatasetContext } from '@/hooks/datasets';
+import { useDatasetContext } from '@/hooks/datasets';
 
 
 export function Chat({ tableName, initialMessages }: { tableName: string, initialMessages: UIMessage[] }) {

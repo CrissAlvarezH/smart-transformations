@@ -1,11 +1,11 @@
-import { usePGLiteDB } from "@/lib/pglite-context";
+import { useApp } from "@/app/providers";
 import { ToolCall } from "@ai-sdk/provider-utils";
 import { createDatasetVersion, getDatasetDataPaginated } from "@/services/datasets";
 import { useQueryClient } from "@tanstack/react-query";
 
 
 export const useOnToolCall = (tableName: string) => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
   const queryClient = useQueryClient();
 
   const onToolCall = async (toolCall: ToolCall<string, any>) => {

@@ -5,11 +5,17 @@ import { CSVIcon } from "@/components/Icons";
 import { ArrowLeftIcon, ArrowRightIcon, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "./ui/skeleton";
+import { useApp } from "@/app/providers";
 
 
 export function Dataset({ tableName }: { tableName: string }) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isFetching, isPending, error } = useDataset(tableName, page);
+  const { selectedDatasetVersion } = useApp();
+  const { data, isLoading, isFetching, isPending, error } = useDataset(tableName, page, selectedDatasetVersion);
+
+  useEffect(() => {
+    console.log('selectedDatasetVersion', selectedDatasetVersion);
+  }, [selectedDatasetVersion]);
 
   if (error) return <div>Error: {error.message}</div>;
 
@@ -82,14 +88,14 @@ function VersionSelector({ tableName }: { tableName: string }) {
   const {
     data: versions,
     isLoading: isVersionsLoading,
-    error: versionsError
+    error: versionsError,
   } = useDatasetVersions(tableName);
-  const [selectedVersion, setSelectedVersion] = useState<string | undefined>();
+  const { selectedDatasetVersion, selectDatasetVersion } = useApp();
 
   useEffect(() => {
     if (!versions) return;
-    const latest = versions.rows[0];
-    setSelectedVersion(latest?.version?.toString());
+    const latest = versions.rows[0].version.toString();
+    selectDatasetVersion(latest);
   }, [versions]);
 
   if (isVersionsLoading) {
@@ -105,9 +111,9 @@ function VersionSelector({ tableName }: { tableName: string }) {
 
   return (
     <Select
-      defaultValue={selectedVersion}
-      value={selectedVersion}
-      onValueChange={(value) => setSelectedVersion(value.toString())}
+      defaultValue={selectedDatasetVersion}
+      value={selectedDatasetVersion}
+      onValueChange={(value) => selectDatasetVersion(value.toString())}
     >
       <SelectTrigger>
         <SelectValue />

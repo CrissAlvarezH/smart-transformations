@@ -1,7 +1,7 @@
-import { usePGLiteDB } from "@/lib/pglite-context";
 import { getMessages, saveMessage } from "@/services/chat";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UIMessage } from "ai";
+import { useApp } from "@/app/providers";
 
 
 function mapToUIMessage(message: any): UIMessage {
@@ -14,7 +14,7 @@ function mapToUIMessage(message: any): UIMessage {
 }
 
 export const useMessages = (tableName: string) => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["messages", tableName],
@@ -28,7 +28,7 @@ export const useMessages = (tableName: string) => {
 }
 
 export const useSaveMessage = (tableName: string) => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync } = useMutation({

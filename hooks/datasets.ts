@@ -1,16 +1,17 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePGLiteDB } from "@/lib/pglite-context";
-import { createDatasetVersion, getDatasetDataPaginated, listDatasets, listDatasetVersions, mapPgDataTypeIdToName } from "@/services/datasets";
+import { useApp } from "@/app/providers";
+
+import { getDatasetDataPaginated, listDatasets, listDatasetVersions, mapPgDataTypeIdToName } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
 import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/datasets";
 import { useState } from "react";
 
 
 export const useDataset = (tableName: string, page: number, version: string = 'latest') => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
 
   const { data, isLoading, isFetching, isPending, error } = useQuery({
-    queryKey: ["dataset", tableName, page],
+    queryKey: ["dataset", tableName, page, version],
     queryFn: async () => await getDatasetDataPaginated(db, tableName, page, version),
     placeholderData: keepPreviousData,
   });
@@ -20,7 +21,7 @@ export const useDataset = (tableName: string, page: number, version: string = 'l
 
 
 export const useDatasetVersions = (tableName: string) => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
 
   const { data, isLoading, isFetching, isPending, error } = useQuery({
     queryKey: ["dataset-versions", tableName],
@@ -41,7 +42,7 @@ export interface DatasetContext {
 }
 
 export const useDatasetContext = (tableName: string) => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
 
   const getDatasetContext = async (): Promise<DatasetContext> => {
     // get the dataset context for prompts, get dataset last version table name, columns and sample records
@@ -64,7 +65,7 @@ export const useDatasetContext = (tableName: string) => {
 
 
 export const useDatasets = () => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["datasets"],
     queryFn: async () => {
@@ -78,7 +79,7 @@ export const useDatasets = () => {
 
 export const useInsertDatasetFromCSVFile = () => {
   const queryClient = useQueryClient();
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export const useInsertDatasetFromCSVFile = () => {
 
 
 export const useValidateTableNameExists = () => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
   const execute = async (tableName: string): Promise<boolean> => {
     return await validateTableNameExists(db, tableName);
   };
@@ -110,7 +111,7 @@ export const useValidateTableNameExists = () => {
 };
 
 export const useDeleteDataset = () => {
-  const { db } = usePGLiteDB();
+  const { db } = useApp();
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, error } = useMutation({

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { PGLiteProvider } from "@/lib/pglite-context";
 import { QueryProvider } from "@/lib/query-client-provider";
+import { AppProvider } from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +30,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PGLiteProvider>
+        <AppProvider>
           <QueryProvider>
             {children}
           </QueryProvider>
-        </PGLiteProvider>
+        </AppProvider>
       </body>
     </html>
   );

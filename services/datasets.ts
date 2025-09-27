@@ -77,7 +77,7 @@ async function getDatasetSchemaByVersion(
 ): Promise<{ tableName: string, columns: string[] }> {
   const result = await db.query(`
     SELECT table_name, columns FROM dataset_versions 
-    WHERE table_name = '${tableName}' AND version = '${version}'
+    WHERE original_table_name = '${tableName}' AND version = '${version}'
   `);
 
   if (result.rows.length === 0) {
