@@ -104,6 +104,7 @@ export async function POST(req: Request) {
     - You can ask questions until you fully understand the transformation the user is describing.
     - Once you understand the user\'s intent, use the\`generate_transformation_sql\` tool and provide it with a clear and concise instruction.This tool will generate an SQL query to perform the requested transformation.
     - After calling \`generate_transformation_sql\`, you must call the \`create_transformation\` tool and pass it the generated SQL query in the previeous step.
+    - Sometimes the generated SQL query cand fail, when that happens try to identify the error and generate a new SQL query, if you don't have any idea how to fix the error, try to ask the user for clarification.
     - DO NOT SHOW THE SQL QUERY TO THE USER.
   `;
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Chat } from "@/components/chat/chat";
 import { Dataset } from "@/components/dataset";
 import { useMessages } from "@/hooks/messages";
+import { Chat } from "@/components/chat/chat";
 
 export const dynamic = "force-dynamic";
 

@@ -12,8 +12,12 @@ interface CSVPreviewProps {
 const maxRows = 10;
 
 export default function CSVPreview({ csvData }: CSVPreviewProps) {
-  const displayRows = csvData.rows.slice(0, maxRows);
+  let displayRows = csvData.rows.slice(0, maxRows);
   const hasMoreRows = csvData.rows.length > maxRows;
+
+  // add __index__ to the first column and add row number values
+  const headers = ['___index___', ...csvData.headers];
+  displayRows = displayRows.map((row, index) => [(index + 1).toString(), ...row]);
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -27,7 +31,7 @@ export default function CSVPreview({ csvData }: CSVPreviewProps) {
       </div>
 
       <div className="overflow-auto border border-gray-300 shadow-sm">
-        <CSVTable csvData={{ headers: csvData.headers, rows: displayRows }} />
+        <CSVTable csvData={{ headers, rows: displayRows }} />
       </div>
 
       {hasMoreRows && (

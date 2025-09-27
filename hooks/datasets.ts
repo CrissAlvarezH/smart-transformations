@@ -111,7 +111,7 @@ export const useValidateTableNameExists = () => {
 };
 
 export const useDeleteDataset = () => {
-  const { db } = useApp();
+  const { db, selectDatasetVersion } = useApp();
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
@@ -122,6 +122,7 @@ export const useDeleteDataset = () => {
       queryClient.removeQueries({ queryKey: ["dataset", tableName] });
       queryClient.removeQueries({ queryKey: ["dataset-versions", tableName] });
       queryClient.invalidateQueries({ queryKey: ["datasets"] });
+      selectDatasetVersion('latest');
     }
   });
   return { mutate, mutateAsync, isPending, error };
