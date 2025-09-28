@@ -10,10 +10,9 @@ import {
   renameDataset 
 } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
-import { deleteDataset, insertCSVFileIntoDatabase, validateTableNameExists } from "@/services/datasets";
+import { deleteDataset, insertCSVFileIntoDatabase } from "@/services/datasets";
 import { useState } from "react";
 import { DatasetTable } from "@/lib/pglite";
-import { RenameDatasetResult } from "@/services/datasets";
 
 
 export const useDatasetBySlug = (slug: string) => {
@@ -106,10 +105,10 @@ export const useInsertDatasetFromCSVFile = () => {
   const execute = async (csvFile: CSVFile): Promise<string | null> => {
     try {
       setIsProcessing(true);
-      const tableName = await insertCSVFileIntoDatabase(db, csvFile, setProgress);
+      const slug = await insertCSVFileIntoDatabase(db, csvFile, setProgress);
       setIsProcessing(false);
       queryClient.invalidateQueries({ queryKey: ["datasets"] });
-      return tableName;
+      return slug;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to insert dataset from CSV file');
       setIsProcessing(false);
@@ -121,16 +120,8 @@ export const useInsertDatasetFromCSVFile = () => {
 };
 
 
-export const useValidateTableNameExists = () => {
-  const { db } = useApp();
-  const execute = async (tableName: string): Promise<boolean> => {
-    return await validateTableNameExists(db, tableName);
-  };
-  return { execute };
-};
-
 export const useDeleteDataset = () => {
-  const { db, selectDatasetVersion } = useApp();
+  const { db } = useApp();
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
@@ -141,7 +132,6 @@ export const useDeleteDataset = () => {
       queryClient.removeQueries({ queryKey: ["dataset-data", datasetId] });
       queryClient.removeQueries({ queryKey: ["dataset-versions", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["datasets"] });
-      selectDatasetVersion('latest');
     }
   });
   return { mutate, mutateAsync, isPending, error };

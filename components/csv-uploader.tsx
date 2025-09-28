@@ -3,8 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import Papa from 'papaparse';
 import { CSVIcon } from '@/components/Icons';
-import { generateTableNameFromCSVFile, validateCSVFileData, validateTableNameExists } from '@/services/datasets';
-import { useValidateTableNameExists } from '@/hooks/datasets';
+import { validateCSVFileData } from '@/services/datasets';
 
 export interface CSVFile {
   filename: string;
@@ -26,7 +25,6 @@ export default function CSVUploader({ onFileUploaded, onError }: CSVUploaderProp
   const [isLoading, setIsLoading] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { execute: validateTableNameExists } = useValidateTableNameExists();
 
   const parseCSV = (text: string): CSVData => {
     if (!text.trim()) {
@@ -63,13 +61,6 @@ export default function CSVUploader({ onFileUploaded, onError }: CSVUploaderProp
     setIsLoading(true);
 
     try {
-      const tableName = generateTableNameFromCSVFile(selectedFile.name);
-      const exists = await validateTableNameExists(tableName);
-      if (exists) {
-        onError('Table name already exists, change the file name and try again');
-        return;
-      }
-
       const text = await selectedFile.text();
       const data = parseCSV(text);
       const error = validateCSVFileData(data);

@@ -240,18 +240,24 @@ export async function createBlankDataset(
   db: PGLiteManager,
 ) {
   const tableName = await createBlankDatasetName(db);
-  await createDataset(db, 'blank.csv', tableName, [], 0);
+  await createDataset(db, 'Blank Dataset', 'blank', 'blank.csv', tableName, [], 0);
   return tableName;
 }
 
 
 export async function createDataset(
   db: PGLiteManager,
+  name: string,
+  slug: string,
   filename: string,
   tableName: string,
   columns: string[],
   size: number
 ): Promise<number> {
+  if (await validateTableNameExists(db, tableName)) {
+    throw new Error(`Table name ${tableName} already exists`);
+  }
+
   await db.query(`
     CREATE TABLE IF NOT EXISTS ${tableName} (
       ___index___ SERIAL PRIMARY KEY, -- this is used internally to maintain the order and show in the dataset table
@@ -259,13 +265,12 @@ export async function createDataset(
     )
   `);
 
-  // by default the name and slug is the same as the table name
   const result = await db.query(`
     INSERT INTO datasets 
-      (table_name, name, slug, columns, filename, size, created_at, updated_at)
+      (name, slug, table_name, columns, filename, size, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
     RETURNING id
-  `, [tableName, tableName, tableName, columns, filename, size]);
+  `, [name, slug, tableName, columns, filename, size]);
   return result.rows[0].id;
 }
 
@@ -316,17 +321,6 @@ export async function createDatasetVersion(
 }
 
 
-export function generateSlugFromName(name: string) {
-  // must be a valid URL part
-  return (
-    name
-      .toLowerCase()
-      .replace(/\s+/g, '-') // replace spaces with dashes
-      .replace(/[^a-z0-9-]/g, '-') // replace invalid characters with dashes
-  )
-}
-
-
 async function checkIfSlugIsInUse(db: PGLiteManager, slug: string) {
   const result = await db.query(`SELECT COUNT(*) FROM datasets WHERE slug = '${slug}'`);
   return result.rows[0].count > 0;
@@ -346,14 +340,40 @@ export async function renameDataset(db: PGLiteManager, datasetId: number, newNam
     return { oldName: dataset.name, newName: newName, oldSlug: dataset.slug, newSlug: dataset.slug };
   }
 
-  let newSlug = generateSlugFromName(newName);
+  let newSlug = await generateUniqueSlugFromName(db, newName);
+
+  await db.query(`
+    UPDATE datasets SET name = $1, slug = $2 WHERE id = $3
+  `, [newName, newSlug, datasetId]);
+
+  return { oldName: dataset.name, newName: newName, oldSlug: dataset.slug, newSlug: newSlug };
+}
+
+
+export async function checkIfDatasetNameIsInUse(db: PGLiteManager, name: string) {
+  const result = await db.query(`SELECT COUNT(*) FROM datasets WHERE name = '${name}'`);
+  return result.rows[0].count > 0;
+}
+
+
+
+export async function generateUniqueSlugFromName(db: PGLiteManager, name: string) {
+  // must be a valid URL part
+  let slug =  (
+    name
+      .toLowerCase()
+      .trim()
+      .replace('.csv', '')
+      .replace(/\s+/g, '-') // replace spaces with dashes
+      .replace(/[^a-z0-9-]/g, '-') // replace invalid characters with dashes
+  )
 
   let attemps = 0;
   let success = false;
   while (attemps < 10 && !success) {
-    if (await checkIfSlugIsInUse(db, newSlug)) {
+    if (await checkIfSlugIsInUse(db, slug)) {
       const suffix = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
-      newSlug = `${newSlug}-${suffix()}`;
+      slug = `${slug}-${suffix()}`;
       attemps++;
     } else {
       success = true;
@@ -361,14 +381,43 @@ export async function renameDataset(db: PGLiteManager, datasetId: number, newNam
   }
 
   if (!success) {
-    throw new Error(`Failed to generate a unique slug for the dataset ${newName}`);
+    throw new Error(`Failed to generate a unique slug for the dataset ${name}`);
   }
 
-  await db.query(`
-    UPDATE datasets SET name = $1, slug = $2 WHERE id = $3
-  `, [newName, newSlug, datasetId]);
+  return slug
+}
 
-  return { oldName: dataset.name, newName: newName, oldSlug: dataset.slug, newSlug: newSlug };
+
+export async function generateUniqueDatasetNameFromCSVFile(db: PGLiteManager, filename: string) {
+  let name = (
+    filename
+      .replace('.csv', '')
+      .trim()
+      .toLowerCase()
+      .replace('-', ' ')
+      .replace('_', ' ')
+  )
+
+  // capitalize the first letter of first word
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+
+  let attemps = 0;
+  let success = false;
+  while (attemps < 10 && !success) {
+    if (await checkIfDatasetNameIsInUse(db, name)) {
+      const suffix = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
+      name = `${name} ${suffix()}`;
+      attemps++;
+    } else {
+      success = true;
+    }
+  }
+
+  if (!success) {
+    throw new Error(`Failed to generate a unique dataset name for the file ${filename}`);
+  }
+
+  return name;
 }
 
 
@@ -385,6 +434,9 @@ export function generateTableNameFromCSVFile(filename: string) {
   if (tableName.match(/^[0-9]/)) {
     tableName = `_${tableName}`;
   }
+
+  tableName += "__" + customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789')();
+
   return tableName;
 }
 
@@ -397,9 +449,11 @@ export async function insertCSVFileIntoDatabase(
   onProgress(0);
   const columns = csvFile.data.headers;
 
+  const datasetName = await generateUniqueDatasetNameFromCSVFile(db, csvFile.filename);
   const tableName = generateTableNameFromCSVFile(csvFile.filename);
+  const slug = await generateUniqueSlugFromName(db, datasetName);
 
-  const datasetId = await createDataset(db, csvFile.filename, tableName, columns, csvFile.size);
+  const datasetId = await createDataset(db, datasetName, slug, csvFile.filename, tableName, columns, csvFile.size);
 
   const batchSize = 100;
   const batchCount = Math.ceil(csvFile.data.rows.length / batchSize);
@@ -432,7 +486,7 @@ export async function insertCSVFileIntoDatabase(
 
   onProgress(100);
 
-  return tableName;
+  return slug;
 }
 
 export function validateCSVFileData(data: CSVData): string | null {

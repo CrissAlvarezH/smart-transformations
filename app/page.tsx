@@ -72,11 +72,11 @@ function UseCSVFileButton({ csvFile, onCancel }: { csvFile: CSVFile, onCancel: (
   const router = useRouter();
 
   const handleClick = async () => {
-    const tableName = await insertCSVFileIntoDatabase(csvFile);
-    if (!tableName) {
+    const slug = await insertCSVFileIntoDatabase(csvFile);
+    if (!slug) {
       return;
     }
-    router.push(`/${tableName}`);
+    router.push(`/${slug}`);
   }
 
   if (isProcessing) {

@@ -5,7 +5,7 @@ import { CSVIcon } from "@/components/Icons";
 import { ArrowLeftIcon, ArrowRightIcon, Edit, Loader2, Save, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "./ui/skeleton";
-import { useApp } from "@/app/providers";
+import { useWorkspace } from "@/app/[slug]/providers";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { DatasetTable } from "@/lib/pglite";
@@ -18,7 +18,7 @@ export interface DatasetProps {
 
 export function Dataset({ dataset }: DatasetProps) {
   const [page, setPage] = useState(1);
-  const { selectedDatasetVersion } = useApp();
+  const { selectedDatasetVersion } = useWorkspace();
   const { data, isLoading, isFetching, isPending, error } = useDatasetDataPaginated(dataset.id, page, selectedDatasetVersion);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ function VersionSelector({ datasetId }: { datasetId: number }) {
     isLoading: isVersionsLoading,
     error: versionsError,
   } = useDatasetVersions(datasetId);
-  const { selectedDatasetVersion, selectDatasetVersion } = useApp();
+  const { selectedDatasetVersion, selectDatasetVersion } = useWorkspace();
 
   useEffect(() => {
     if (!versions) return;

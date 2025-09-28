@@ -98,6 +98,11 @@ export function DatasetList() {
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <FileText className="h-4 w-4" />
+                  <span>{dataset.filename}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Calendar className="h-4 w-4" />
                   <span>Created {formatDate(dataset.created_at)}</span>
                 </div>
@@ -133,12 +138,12 @@ export function DatasetList() {
 }
 
 
-function DeleteDatasetButton({ 
-  datasetToDelete, 
-  setDatasetToDelete 
-}: { 
-  datasetToDelete: number | null, 
-  setDatasetToDelete: (datasetToDelete: number | null) => void 
+function DeleteDatasetButton({
+  datasetToDelete,
+  setDatasetToDelete
+}: {
+  datasetToDelete: number | null,
+  setDatasetToDelete: (datasetToDelete: number | null) => void
 }) {
   const { mutateAsync: deleteDataset, isPending, error } = useDeleteDataset();
 

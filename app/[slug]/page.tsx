@@ -5,6 +5,7 @@ import { useDatasetBySlug } from "@/hooks/datasets";
 import { Button } from "@/components/ui/button";
 import { FileX, Home, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { WorkspaceProvider } from "./providers";
 
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,9 @@ export default function DatasetPage() {
   if (!dataset) return <DatasetNotFound />
 
   return (
-    <Workspace dataset={dataset} />
+    <WorkspaceProvider>
+      <Workspace dataset={dataset} />
+    </WorkspaceProvider>
   )
 }
 
