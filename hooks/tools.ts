@@ -4,7 +4,7 @@ import { createDatasetVersion, getDatasetDataPaginated } from "@/services/datase
 import { useQueryClient } from "@tanstack/react-query";
 
 
-export const useOnToolCall = (tableName: string) => {
+export const useOnToolCall = (datasetId: number) => {
   const { db } = useApp();
   const queryClient = useQueryClient();
 
@@ -13,7 +13,7 @@ export const useOnToolCall = (tableName: string) => {
 
     switch (toolCall.toolName) {
       case 'get_dataset_sample':
-        const data = await getDatasetDataPaginated(db, tableName, 1, 'latest', 10);
+        const data = await getDatasetDataPaginated(db, datasetId, 1, 'latest', 10);
         // add the headers to the data
         const headers = data.data.fields.map((field: any) => field.name);
 
@@ -25,7 +25,7 @@ export const useOnToolCall = (tableName: string) => {
 
       case 'create_transformation':
         try {
-          await createDatasetVersion(db, toolCall.input.sql, tableName);
+          await createDatasetVersion(db, datasetId, toolCall.input.sql);
         } catch (error) {
           console.error('Error creating transformation', error);
           return {
@@ -33,8 +33,8 @@ export const useOnToolCall = (tableName: string) => {
             error: error instanceof Error ? error.message : 'Failed to create transformation',
           };
         }
-        queryClient.invalidateQueries({ queryKey: ["dataset", tableName] });
-        queryClient.invalidateQueries({ queryKey: ["dataset-versions", tableName] });
+        queryClient.invalidateQueries({ queryKey: ["dataset-data", datasetId] });
+        queryClient.invalidateQueries({ queryKey: ["dataset-versions", datasetId] });
         return { success: true };
     }
   };

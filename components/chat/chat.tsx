@@ -11,30 +11,28 @@ import { useOnToolCall } from '@/hooks/tools';
 import { useDatasetContext } from '@/hooks/datasets';
 
 
-export function Chat({ tableName, initialMessages }: { tableName: string, initialMessages: UIMessage[] }) {
-  const { mutateAsync: saveMessage } = useSaveMessage(tableName);
-  const { getDatasetContext } = useDatasetContext(tableName);
-  const { onToolCall } = useOnToolCall(tableName);
+export function Chat({ datasetId, initialMessages }: { datasetId: number, initialMessages: UIMessage[] }) {
+  const { mutateAsync: saveMessage } = useSaveMessage(datasetId);
+  const { getDatasetContext } = useDatasetContext(datasetId);
+  const { onToolCall } = useOnToolCall(datasetId);
 
   const { messages, sendMessage, status, addToolResult } = useChat({
-    id: tableName,
+    id: datasetId.toString(),
     transport: new DefaultChatTransport({
       api: '/api/chat',
       body: async () => {
         try {
           const context = await getDatasetContext();
 
-          const columns = context?.columns.map((field: any) => ({ name: field.name, dataType: field.dataType }));
-
-          let parsedSample = context?.sample.map((row: any) => Object.values(row));
-          const headers = columns.map((column: any) => column.name);
+          let parsedSample = context.sample.map((row: any) => Object.values(row));
+          const headers = context.columns.map((column: any) => column.name);
           parsedSample = [headers, ...parsedSample];
 
           return {
             datasetContext: {
               tableName: context?.tableName,
               versionTableName: context?.versionTableName,
-              columns: columns,
+              columns: context.columns,
               sample: parsedSample,
             }
           }

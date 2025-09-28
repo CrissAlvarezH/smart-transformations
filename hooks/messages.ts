@@ -13,13 +13,13 @@ function mapToUIMessage(message: any): UIMessage {
   };
 }
 
-export const useMessages = (tableName: string) => {
+export const useMessages = (datasetId: number) => {
   const { db } = useApp();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["messages", tableName],
+    queryKey: ["messages", datasetId],
     queryFn: async () => {
-      const messages = await getMessages(db, tableName);
+      const messages = await getMessages(db, datasetId);
       return messages.rows.map(mapToUIMessage);
     }
   });
@@ -27,14 +27,14 @@ export const useMessages = (tableName: string) => {
   return { data, isLoading, isError };
 }
 
-export const useSaveMessage = (tableName: string) => {
+export const useSaveMessage = (datasetId: number) => {
   const { db } = useApp();
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync } = useMutation({
-    mutationFn: async (message: UIMessage) => await saveMessage(db, tableName, message),
+    mutationFn: async (message: UIMessage) => await saveMessage(db, datasetId, message),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", tableName] });
+      queryClient.invalidateQueries({ queryKey: ["messages", datasetId] });
     }
   });
 

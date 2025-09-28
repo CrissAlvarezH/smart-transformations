@@ -10,14 +10,13 @@ import { useState } from "react";
 
 export function DatasetList() {
   const { data, isLoading, isError } = useDatasets();
-  const [datasetToDelete, setDatasetToDelete] = useState<string | null>(null);
+  const [datasetIdToDelete, setDatasetIdToDelete] = useState<number | null>(null);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="flex items-center gap-2 text-gray-600">
           <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
-          <span>Loading datasets...</span>
         </div>
       </div>
     );
@@ -66,14 +65,14 @@ export function DatasetList() {
         <span className="text-sm text-gray-500">{datasets.length} dataset{datasets.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {datasetToDelete && (
-        <DeleteDatasetButton datasetToDelete={datasetToDelete} setDatasetToDelete={setDatasetToDelete} />
+      {datasetIdToDelete && (
+        <DeleteDatasetButton datasetToDelete={datasetIdToDelete} setDatasetToDelete={setDatasetIdToDelete} />
       )}
 
       <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
         {datasets.map((dataset) => (
           <div
-            key={dataset.table_name}
+            key={dataset.id}
             className="group block"
           >
             <div className="bg-white border border-gray-300 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200">
@@ -81,12 +80,12 @@ export function DatasetList() {
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-medium text-lg text-gray-900 truncate" title={dataset.filename}>
-                      {dataset.filename}
+                    <h3 className="font-medium text-lg text-gray-900 truncate" title={dataset.name}>
+                      {dataset.name}
                     </h3>
                   </div>
 
-                  <button className="text-gray-400 hover:text-gray-900 cursor-pointer" onClick={() => setDatasetToDelete(dataset.table_name)}>
+                  <button className="text-gray-400 hover:text-gray-900 cursor-pointer" onClick={() => setDatasetIdToDelete(dataset.id)}>
                     <Trash className="h-4 w-4" />
                   </button>
                 </div>
@@ -98,13 +97,13 @@ export function DatasetList() {
                   <span>{formatFileSize(dataset.size)}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Calendar className="h-4 w-4" />
                   <span>Created {formatDate(dataset.created_at)}</span>
                 </div>
 
                 {dataset.updated_at !== dataset.created_at && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Calendar className="h-4 w-4" />
                     <span>Updated {formatDate(dataset.updated_at)}</span>
                   </div>
@@ -112,7 +111,7 @@ export function DatasetList() {
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link href={`/${dataset.table_name}`}>
+                <Link href={`/${dataset.slug}`}>
                   <div className="flex items-center justify-between hover:bg-blue-50 p-2 rounded-md text-blue-600">
                     <span className="text-sm uppercase tracking-wide font-medium">
                       Abrir dataset
@@ -134,7 +133,13 @@ export function DatasetList() {
 }
 
 
-function DeleteDatasetButton({ datasetToDelete, setDatasetToDelete }: { datasetToDelete: string | null, setDatasetToDelete: (datasetToDelete: string | null) => void }) {
+function DeleteDatasetButton({ 
+  datasetToDelete, 
+  setDatasetToDelete 
+}: { 
+  datasetToDelete: number | null, 
+  setDatasetToDelete: (datasetToDelete: number | null) => void 
+}) {
   const { mutateAsync: deleteDataset, isPending, error } = useDeleteDataset();
 
   const handleClick = async () => {

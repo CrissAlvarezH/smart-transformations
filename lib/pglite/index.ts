@@ -170,9 +170,14 @@ class PGLiteManager {
 
 
 export interface DatasetTable {
+  id: number;
+  slug: string;
+  name: string;
   table_name: string;
+  columns: any[];
   filename: string;
   size: number;
+  started_as_blank: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -182,7 +187,7 @@ export interface MessageTable {
   role: string;
   metadata: any;
   parts: any;
-  table_name: string;
+  dataset_id: number;
 }
 
 export async function runMigrations() {
@@ -193,10 +198,14 @@ export async function runMigrations() {
   // create datasets table
   await db.query(`
     CREATE TABLE IF NOT EXISTS datasets (
-      table_name TEXT NOT NULL PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      table_name TEXT NOT NULL UNIQUE,
       columns JSONB NOT NULL,
       filename TEXT NOT NULL,
       size INTEGER NOT NULL,
+      started_as_blank BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMP NOT NULL,
       updated_at TIMESTAMP NOT NULL
     )
@@ -208,7 +217,7 @@ export async function runMigrations() {
       table_name TEXT NOT NULL PRIMARY KEY,
       columns JSONB NOT NULL,
       version INTEGER NOT NULL,
-      original_table_name TEXT NOT NULL REFERENCES datasets(table_name) ON DELETE CASCADE,
+      dataset_id INTEGER NOT NULL REFERENCES datasets(id) ON DELETE CASCADE,
       created_at TIMESTAMP NOT NULL
     )
   `);
@@ -220,9 +229,9 @@ export async function runMigrations() {
       role TEXT NOT NULL,
       metadata JSONB NOT NULL,
       parts JSONB NOT NULL,
-      table_name TEXT NOT NULL REFERENCES datasets(table_name) ON DELETE CASCADE,
+      dataset_id INTEGER NOT NULL REFERENCES datasets(id) ON DELETE CASCADE,
       created_at TIMESTAMP NOT NULL,
-      PRIMARY KEY (id, table_name)
+      PRIMARY KEY (id, dataset_id)
     )
   `);
 }

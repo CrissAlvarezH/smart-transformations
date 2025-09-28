@@ -1,17 +1,25 @@
-import { useDataset, useDatasetVersions } from "@/hooks/datasets";
+import { useDatasetDataPaginated, useDatasetVersions, useRenameDataset } from "@/hooks/datasets";
 import { useEffect, useState } from "react";
 import CSVTable from "@/components/csv-table";
 import { CSVIcon } from "@/components/Icons";
-import { ArrowLeftIcon, ArrowRightIcon, Loader2 } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, Edit, Loader2, Save, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { useApp } from "@/app/providers";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { DatasetTable } from "@/lib/pglite";
+import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
+export interface DatasetProps {
+  dataset: DatasetTable;
+}
 
-export function Dataset({ tableName }: { tableName: string }) {
+export function Dataset({ dataset }: DatasetProps) {
   const [page, setPage] = useState(1);
   const { selectedDatasetVersion } = useApp();
-  const { data, isLoading, isFetching, isPending, error } = useDataset(tableName, page, selectedDatasetVersion);
+  const { data, isLoading, isFetching, isPending, error } = useDatasetDataPaginated(dataset.id, page, selectedDatasetVersion);
 
   useEffect(() => {
     console.log('selectedDatasetVersion', selectedDatasetVersion);
@@ -31,7 +39,7 @@ export function Dataset({ tableName }: { tableName: string }) {
       {data && (
         <>
           <TableToolbar
-            tableName={tableName}
+            dataset={dataset}
             total={data.total}
             page={page}
             onPageChange={setPage}
@@ -48,13 +56,13 @@ export function Dataset({ tableName }: { tableName: string }) {
 }
 
 function TableToolbar({
-  tableName,
+  dataset,
   total,
   page,
   onPageChange,
   isLoading
 }: {
-  tableName: string,
+  dataset: DatasetTable,
   total: number,
   page: number,
   onPageChange: (page: number) => void,
@@ -67,11 +75,12 @@ function TableToolbar({
 
         <div className="flex items-center gap-2">
           <CSVIcon className="h-5 w-5 text-gray-700 mx-2" />
-          <h1 className="text-gray-700">{tableName}</h1>
+          <h1 className="text-gray-700">{dataset.name}</h1>
+          <RenameDatasetButton dataset={dataset} />
         </div>
 
         <div className="flex items-center gap-2">
-          <VersionSelector tableName={tableName} />
+          <VersionSelector datasetId={dataset.id} />
         </div>
 
       </div>
@@ -84,12 +93,12 @@ function TableToolbar({
   )
 }
 
-function VersionSelector({ tableName }: { tableName: string }) {
+function VersionSelector({ datasetId }: { datasetId: number }) {
   const {
     data: versions,
     isLoading: isVersionsLoading,
     error: versionsError,
-  } = useDatasetVersions(tableName);
+  } = useDatasetVersions(datasetId);
   const { selectedDatasetVersion, selectDatasetVersion } = useApp();
 
   useEffect(() => {
@@ -131,6 +140,45 @@ function VersionSelector({ tableName }: { tableName: string }) {
     </Select>
   )
 }
+
+function RenameDatasetButton({ dataset }: { dataset: DatasetTable }) {
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [newName, setNewName] = useState(dataset.name);
+  const { mutateAsync: renameDataset, isPending, error } = useRenameDataset();
+
+  const handleRename = async () => {
+    const { newSlug } = await renameDataset({ datasetId: dataset.id, newName: newName });
+    router.replace(`/${newSlug}`);
+  }
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent>
+          <DialogTitle>Rename Dataset</DialogTitle>
+          <DialogDescription>
+            <Input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            {error && <span className="text-red-700">{error.message}</span>}
+          </DialogDescription>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)} className="flex items-center gap-2" disabled={isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleRename} className="flex items-center gap-2" disabled={isPending}>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <button onClick={() => setIsOpen(true)}>
+        <Edit className="w-4 h-4 text-gray-400/80 cursor-pointer hover:text-gray-800" />
+      </button>
+    </>
+  )
+}
+
 
 function Pagination({
   total,
