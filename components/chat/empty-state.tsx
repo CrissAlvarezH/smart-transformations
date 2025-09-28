@@ -1,10 +1,11 @@
 
 
-export function EmptyState({onSelectPrompt}: {onSelectPrompt: (prompt: string) => void}) {
+export function EmptyState({ onSelectPrompt }: { onSelectPrompt: (prompt: string) => void }) {
   const examplePrompts = [
     { title: "Create a new column", prompt: "Create a new column" },
     { title: "Filter the data", prompt: "Filter the data" },
-    { title: "Sort by a specific column", prompt: "Sort by a specific column" },
+    { title: "Sort by a column", prompt: "Sort by a column" },
+    { title: "Change empty values by cero", prompt: "Change empty values by cero" },
   ];
 
   return (
@@ -12,7 +13,10 @@ export function EmptyState({onSelectPrompt}: {onSelectPrompt: (prompt: string) =
       <div className="max-w-2xl mx-auto text-center space-y-8">
         <div className="space-y-4">
           <h1 className="text-3xl font-semibold text-white">
-            What transformations would you like to apply to the data?
+            Wanna transform your data?
+          </h1>
+          <h1 className="text-3xl font-semibold text-white">
+            I got you!
           </h1>
           <p className="text-lg text-gray-400">
             Describe what you want to apply to the data.
