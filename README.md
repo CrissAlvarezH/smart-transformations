@@ -2,7 +2,7 @@
 
 🌐 **Live Demo**: [smart-transformations.alvarezcristian.com](https://smart-transformations.alvarezcristian.com)
 
-![Trailer](docs/imgs/trailer.gif)
+<img src="docs/imgs/trailer.gif" alt="Trailer" width="900" height="506" />
 
 
 ## Description
@@ -71,4 +71,3 @@ npm run build
 # Start production server
 npm start
 ```
-
