@@ -7,6 +7,7 @@ import { ArrowRightIcon, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useInsertDatasetFromCSVFile } from '@/hooks/datasets';
 import { DatasetList } from '@/components/dataset-list';
+import Image from 'next/image';
 
 
 export default function Home() {
@@ -33,7 +34,6 @@ export default function Home() {
           />
         )}
 
-
         {error && <ErrorState error={error} />}
 
         {csvFile && (
@@ -58,6 +58,8 @@ export default function Home() {
         )}
 
         {csvFile && <CSVPreview csvData={csvFile.data} />}
+
+        {!csvFile && <GifTrailer />}
 
         {!csvFile && <DatasetList />}
 
@@ -115,6 +117,15 @@ function UseCSVFileButton({ csvFile, onCancel }: { csvFile: CSVFile, onCancel: (
         Use this file
         <ArrowRightIcon className="h-5 w-5 text-green-500 " />
       </button>
+    </div>
+  )
+}
+
+
+function GifTrailer() {
+  return (
+    <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
+      <Image src="/trailer.gif" alt="Trailer" width={896} height={504} />
     </div>
   )
 }

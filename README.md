@@ -2,6 +2,9 @@
 
 🌐 **Live Demo**: [smart-transformations.alvarezcristian.com](https://smart-transformations.alvarezcristian.com)
 
+![Trailer](docs/imgs/trailer.gif)
+
+
 ## Description
 
 Smart Transformations is an AI-powered data analysis platform that allows users to upload CSV files and interact with their data through natural language conversations. The application provides an intuitive interface for data exploration, transformation, and analysis without requiring complex SQL queries or programming knowledge.
@@ -69,7 +72,3 @@ npm run build
 npm start
 ```
 
-### Workspace Interface
-![Workspace Empty State](docs/imgs/workspace-page-empty-state.png)
-
-*The main workspace interface showing the chat panel and data visualization area*
