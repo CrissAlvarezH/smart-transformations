@@ -4,7 +4,8 @@ import { Chat } from "@/components/chat/chat";
 import { Dataset } from "@/components/dataset";
 import { useMessages } from "@/hooks/messages";
 import { DatasetTable } from "@/lib/pglite";
-import { Loader2 } from "lucide-react";
+import { HomeIcon, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 
 export function Workspace({ dataset }: { dataset: DatasetTable }) {
@@ -23,7 +24,17 @@ export function Workspace({ dataset }: { dataset: DatasetTable }) {
             <span className="text-gray-500">Loading...</span>
           </div>
         ) : (
-          <Chat datasetId={dataset.id} initialMessages={storedMessages || []} />
+          <div className="h-full flex flex-col">
+            <div className="p-2 flex">
+              <Link href="/" className="flex py-1 px-2 items-center gap-2 text-gray-500 hover:text-gray-300">
+                <HomeIcon className="w-4 h-4" /> Home
+              </Link>
+            </div>
+
+            <div className="flex-1">
+              <Chat datasetId={dataset.id} initialMessages={storedMessages || []} />
+            </div>
+          </div>
         )}
       </div>
 
