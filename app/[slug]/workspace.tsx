@@ -31,7 +31,7 @@ export function Workspace({ dataset }: { dataset: DatasetTable }) {
               </Link>
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 h-full overflow-auto">
               <Chat datasetId={dataset.id} initialMessages={storedMessages || []} />
             </div>
           </div>

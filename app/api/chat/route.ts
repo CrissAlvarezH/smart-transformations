@@ -52,6 +52,9 @@ const createTools = (datasetContext: RequestDatasetContext) => ({
         Please generate the sql query to perform the requested transformation.
       `
 
+      console.log('generate_transformation_sql systemPrompt', systemPrompt);
+      console.log('generate_transformation_sql userPrompt', userPrompt);
+
       const result = await generateObject({
         model: openai('gpt-4.1'),
         system: systemPrompt,
@@ -107,6 +110,8 @@ export async function POST(req: Request) {
     - Sometimes the generated SQL query cand fail, when that happens try to identify the error and generate a new SQL query, if you don't have any idea how to fix the error, try to ask the user for clarification.
     - DO NOT SHOW THE SQL QUERY TO THE USER.
   `;
+
+  console.log('systemPrompt', systemPrompt);
 
   const result = streamText({
     model: openai('gpt-4.1'),

@@ -16,7 +16,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`rounded-2xl px-4 py-3 ${message.role === 'user'
-          ? 'bg-gray-800 text-white ml-12 max-w-[90%]'
+          ? 'bg-zinc-800 text-white ml-12 max-w-[90%]'
           : 'w-full'
           }`}
       >
@@ -26,7 +26,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               return message.role === 'user' ? (
                 <p key={index} className="whitespace-pre-wrap break-words">{part.text}</p>
               ) : (
-                <div key={index} className="pt-2">
+                <div key={index} className="py-2">
                   <Markdown>{part.text}</Markdown>
                 </div>
               );
@@ -79,26 +79,26 @@ function GenericToolPart({ part }: { part: any }) {
         <div className="flex items-center gap-2">
           <Bolt className="w-4 h-4" />
           <div className="flex gap-2 items-center">
-            <span className="font-semibold text-xs text-gray-100">{toolNameTranslated}</span>
+            <span className="font-semibold text-xs text-zinc-100">{toolNameTranslated}</span>
 
             {state !== 'output-available' && <Loader2 className="w-3 h-3 animate-spin" />}
-            {state !== 'output-available' && <span className="text-gray-400 text-xs">{label}</span>}
+            {state !== 'output-available' && <span className="text-zinc-400 text-xs">{label}</span>}
           </div>
         </div>
 
 
-        <button onClick={() => setIsOpen(!isOpen)} className="hover:bg-gray-700 rounded-full p-1 cursor-pointer">
+        <button onClick={() => setIsOpen(!isOpen)} className="hover:bg-zinc-700 rounded-full p-1 cursor-pointer">
           <ChevronDown className={`w-4 h-4 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
-      <div className={`w-full rounded bg-gray-800 transition-[max-height] ease-in-out duration-500 ${isOpen ? 'max-h-60 overflow-y-auto' : 'max-h-0 overflow-hidden'}`}>
-        <p className="text-xs text-gray-400 p-2">Input:</p>
+      <div className={`w-full rounded bg-zinc-800 transition-[max-height] ease-in-out duration-500 ${isOpen ? 'max-h-60 overflow-y-auto' : 'max-h-0 overflow-hidden'}`}>
+        <p className="text-xs text-zinc-400 p-2">Input:</p>
         <pre className={`whitespace-pre-wrap text-xs break-words p-2`}>
           {JSON.stringify(input, null, 2)}
         </pre>
 
-        <p className="text-xs text-gray-400 p-2">Output:</p>
+        <p className="text-xs text-zinc-400 p-2">Output:</p>
         <pre className={`whitespace-pre-wrap text-xs break-words p-2`}>
           {JSON.stringify(output, null, 2)}
         </pre>

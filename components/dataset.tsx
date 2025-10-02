@@ -2,7 +2,7 @@ import { useDatasetDataPaginated, useDatasetVersions, useRenameDataset } from "@
 import { useEffect, useState } from "react";
 import CSVTable from "@/components/csv-table";
 import { CSVIcon } from "@/components/Icons";
-import { ArrowLeftIcon, ArrowRightIcon, Edit, Loader2, Save, X } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, Edit, FileText, Loader2, Save, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { useWorkspace } from "@/app/[slug]/providers";
@@ -34,6 +34,7 @@ export function Dataset({ dataset }: DatasetProps) {
     };
   };
 
+  const isBlank = data?.data?.rows.length === 0 && dataset.columns.length === 0;
   return (
     <div className="flex-1 h-full flex flex-col overflow-auto bg-white">
       {data && (
@@ -47,7 +48,15 @@ export function Dataset({ dataset }: DatasetProps) {
           />
 
           <div className="flex-1 overflow-auto">
-            <CSVTable csvData={convertToCSVData(data.data)} />
+            {isBlank ? (
+              <div className="pt-24 text-center flex flex-col gap-2 items-center justify-center">
+                <FileText className="w-12 h-12 text-gray-300 mb-2" />
+                <p className="text-xl font-bold text-gray-800">This dataset is empty</p>
+                <p className="text-gray-400">You can tell the AI to fill it up for you with the data you want</p>
+              </div>
+            ) : (
+              <CSVTable csvData={convertToCSVData(data.data)} />
+            )}
           </div>
         </>
       )}

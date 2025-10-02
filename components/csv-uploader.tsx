@@ -112,55 +112,49 @@ export default function CSVUploader({ onFileUploaded }: CSVUploaderProps) {
 
   return (
     <div>
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        onChange={handleFileInput}
+        className="hidden"
+      />
+      
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer group ${
+          isDragActive
+            ? 'border-green-400 bg-green-400/10'
+            : 'border-zinc-700 hover:border-green-400 hover:bg-green-400/5'
+        }`}
+        onClick={() => fileInputRef.current?.click()}
+      >
         {!isLoading && (
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragActive
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400'
-              }`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileInput}
-              className="hidden"
-            />
-
-            <div className="space-y-4">
-              <CSVIcon className="h-12 w-12 text-gray-400 mx-auto" />
-
-              <div>
-                <p className="text-lg font-medium text-gray-900">
-                  {isDragActive ? 'Drop your CSV file here' : 'Upload CSV file'}
-                </p>
-                <p className="text-gray-500 mt-1">
-                  Drag and drop or{' '}
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-blue-600 hover:text-blue-500 font-medium cursor-pointer"
-                  >
-                    browse files
-                  </button>
-                </p>
-              </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-center w-12 h-12 bg-zinc-800 rounded-xl mx-auto group-hover:bg-green-500/20 transition-colors">
+              <CSVIcon className="h-6 w-6 text-green-400" />
+            </div>
+            
+            <div>
+              <p className="text-base font-medium text-white">
+                {isDragActive ? 'Drop your CSV file here' : 'Choose CSV File'}
+              </p>
+              <p className="text-sm text-zinc-400 mt-1">
+                Drag & drop or click to browse
+              </p>
             </div>
           </div>
         )}
 
         {isLoading && (
-          <div className="m-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <p className="ml-3 text-sm text-blue-700">Processing CSV file...</p>
-            </div>
+          <div className="flex items-center justify-center space-x-3 py-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-400"></div>
+            <p className="text-sm text-green-400">Processing...</p>
           </div>
         )}
-      </div >
+      </div>
 
       {error && <ErrorState error={error} />}
     </div>
@@ -169,7 +163,7 @@ export default function CSVUploader({ onFileUploaded }: CSVUploaderProps) {
 
 function ErrorState({ error }: { error: string }) {
   return (
-    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+    <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-md">
       <div className="flex">
         <div className="flex-shrink-0">
           <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -179,7 +173,7 @@ function ErrorState({ error }: { error: string }) {
           </svg>
         </div>
         <div className="ml-3">
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       </div>
     </div>

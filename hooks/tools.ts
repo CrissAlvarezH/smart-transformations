@@ -2,6 +2,7 @@ import { useApp } from "@/app/providers";
 import { ToolCall } from "@ai-sdk/provider-utils";
 import { createDatasetVersion, getDatasetDataPaginated } from "@/services/datasets";
 import { useQueryClient } from "@tanstack/react-query";
+import { DATASET_DATA, DATASET_VERSIONS } from "./query-keys";
 
 
 export const useOnToolCall = (datasetId: number) => {
@@ -33,8 +34,8 @@ export const useOnToolCall = (datasetId: number) => {
             error: error instanceof Error ? error.message : 'Failed to create transformation',
           };
         }
-        queryClient.invalidateQueries({ queryKey: ["dataset-data", datasetId] });
-        queryClient.invalidateQueries({ queryKey: ["dataset-versions", datasetId] });
+        queryClient.invalidateQueries({ queryKey: [DATASET_DATA, datasetId] });
+        queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, datasetId] });
         return { success: true };
     }
   };

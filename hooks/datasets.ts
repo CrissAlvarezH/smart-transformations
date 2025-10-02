@@ -1,24 +1,25 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/app/providers";
 
-import { 
-  getDatasetBySlug, 
-  getDatasetDataPaginated, 
-  listDatasets, 
-  listDatasetVersions, 
-  mapPgDataTypeIdToName, 
-  renameDataset 
+import {
+  getDatasetBySlug,
+  getDatasetDataPaginated,
+  listDatasets,
+  listDatasetVersions,
+  mapPgDataTypeIdToName,
+  renameDataset
 } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
-import { deleteDataset, insertCSVFileIntoDatabase } from "@/services/datasets";
+import { createBlankDataset, deleteDataset, insertCSVFileIntoDatabase } from "@/services/datasets";
 import { useState } from "react";
 import { DatasetTable } from "@/lib/pglite";
+import { DATASET_BY_SLUG, DATASET_DATA, DATASET_VERSIONS, DATASETS, MESSAGES } from "./query-keys";
 
 
 export const useDatasetBySlug = (slug: string) => {
   const { db } = useApp();
   const { data, isLoading, isFetching, isPending, error } = useQuery({
-    queryKey: ["dataset-by-slug", slug],
+    queryKey: [DATASET_BY_SLUG, slug],
     queryFn: async () => await getDatasetBySlug(db, slug),
   });
   return { dataset: data as DatasetTable, isLoading, isFetching, isPending, error };
@@ -29,7 +30,7 @@ export const useDatasetDataPaginated = (datasetId: number, page: number, version
   const { db } = useApp();
 
   const { data, isLoading, isFetching, isPending, error } = useQuery({
-    queryKey: ["dataset-data", datasetId, page, version],
+    queryKey: [DATASET_DATA, datasetId, page, version],
     queryFn: async () => await getDatasetDataPaginated(db, datasetId, page, version),
     placeholderData: keepPreviousData,
   });
@@ -42,7 +43,7 @@ export const useDatasetVersions = (datasetId: number) => {
   const { db } = useApp();
 
   const { data, isLoading, isFetching, isPending, error } = useQuery({
-    queryKey: ["dataset-versions", datasetId],
+    queryKey: [DATASET_VERSIONS, datasetId],
     queryFn: async () => {
       return await listDatasetVersions(db, datasetId);
     }
@@ -85,7 +86,7 @@ export const useDatasetContext = (datasetId: number) => {
 export const useDatasets = () => {
   const { db } = useApp();
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["datasets"],
+    queryKey: [DATASETS],
     queryFn: async () => {
       return await listDatasets(db);
     }
@@ -107,7 +108,7 @@ export const useInsertDatasetFromCSVFile = () => {
       setIsProcessing(true);
       const slug = await insertCSVFileIntoDatabase(db, csvFile, setProgress);
       setIsProcessing(false);
-      queryClient.invalidateQueries({ queryKey: ["datasets"] });
+      queryClient.invalidateQueries({ queryKey: [DATASETS] });
       return slug;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to insert dataset from CSV file');
@@ -120,6 +121,19 @@ export const useInsertDatasetFromCSVFile = () => {
 };
 
 
+export const useCreateBlankDataset = () => {
+  const { db } = useApp();
+  const queryClient = useQueryClient();
+  const { mutate, mutateAsync, isPending, error } = useMutation({
+    mutationFn: async () => await createBlankDataset(db),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [DATASETS] });
+    }
+  });
+  return { mutate, mutateAsync, isPending, error };
+};
+
+
 export const useDeleteDataset = () => {
   const { db } = useApp();
   const queryClient = useQueryClient();
@@ -128,10 +142,10 @@ export const useDeleteDataset = () => {
     mutationFn: async (datasetId: number) => await deleteDataset(db, datasetId),
     onSuccess: (_, datasetId) => {
       // Remove cached data completely instead of just invalidating
-      queryClient.removeQueries({ queryKey: ["messages", datasetId] });
-      queryClient.removeQueries({ queryKey: ["dataset-data", datasetId] });
-      queryClient.removeQueries({ queryKey: ["dataset-versions", datasetId] });
-      queryClient.invalidateQueries({ queryKey: ["datasets"] });
+      queryClient.removeQueries({ queryKey: [MESSAGES, datasetId] });
+      queryClient.removeQueries({ queryKey: [DATASET_DATA, datasetId] });
+      queryClient.removeQueries({ queryKey: [DATASET_VERSIONS, datasetId] });
+      queryClient.invalidateQueries({ queryKey: [DATASETS] });
     }
   });
   return { mutate, mutateAsync, isPending, error };
@@ -143,9 +157,9 @@ export const useRenameDataset = () => {
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: async ({datasetId, newName}: {datasetId: number, newName: string}) => await renameDataset(db, datasetId, newName),
+    mutationFn: async ({ datasetId, newName }: { datasetId: number, newName: string }) => await renameDataset(db, datasetId, newName),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["datasets"] });
+      queryClient.invalidateQueries({ queryKey: [DATASETS] });
     }
   });
 

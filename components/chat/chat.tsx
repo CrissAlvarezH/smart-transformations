@@ -44,6 +44,9 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     messages: initialMessages,
+    onError: async (error: Error) => {
+      console.error('Error sending message', error);
+    },
     onFinish: async ({ message }) => {
       await saveMessage(message);
     },
@@ -130,9 +133,9 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
       </div>
 
       {/* Input area */}
-      <div className="flex-shrink-0 p-6 border-t border-gray-800">
+      <div className="flex-shrink-0 p-6 border-t border-zinc-800">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="relative flex items-end bg-gray-900 rounded-xl border border-gray-700 focus-within:border-gray-600">
+          <div className="relative flex items-end bg-zinc-900 rounded-xl border border-zinc-800 focus-within:border-zinc-700">
             {/* Text input */}
             <textarea
               ref={textareaRef}
@@ -140,7 +143,7 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
               onChange={handleMessageChange}
               placeholder="Describe what you want to do with the data"
               rows={3}
-              className="flex-1 bg-transparent px-3 py-3 text-white placeholder-gray-500 focus:outline-none min-h-[56px] max-h-48 resize-none overflow-y-auto custom-scrollbar-dark"
+              className="flex-1 bg-transparent px-3 py-3 text-white placeholder-zinc-500 focus:outline-none min-h-[56px] max-h-48 resize-none overflow-y-auto custom-scrollbar-dark"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -151,14 +154,14 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
 
             {/* Send button */}
             {status !== 'ready' ? (
-              <div className="p-2 m-2 bg-gray-600 text-gray-300 rounded-full">
+              <div className="p-2 m-2 bg-zinc-600 text-zinc-300 rounded-full">
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div>
             ) : (
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className="p-2 m-2 bg-white text-black rounded-full hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400 transition-colors"
+                className="p-2 m-2 bg-white text-black rounded-full hover:bg-zinc-100 disabled:bg-zinc-600 disabled:text-zinc-400 transition-colors"
               >
                 <ArrowUpIcon className="w-4 h-4" />
               </button>

@@ -15,8 +15,8 @@ export function DatasetList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+        <div className="flex items-center gap-2 text-zinc-400">
+          <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
         </div>
       </div>
     );
@@ -24,9 +24,9 @@ export function DatasetList() {
 
   if (isError) {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-        <div className="flex items-center gap-2 text-red-700">
-          <div className="h-5 w-5 text-red-500">⚠</div>
+      <div className="p-6 bg-red-900/20 border border-red-800 rounded-lg">
+        <div className="flex items-center gap-2 text-red-400">
+          <div className="h-5 w-5 text-red-400">⚠</div>
           <span>Error loading datasets: {isError}</span>
         </div>
       </div>
@@ -61,8 +61,8 @@ export function DatasetList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Your Datasets</h2>
-        <span className="text-sm text-gray-500">{datasets.length} dataset{datasets.length !== 1 ? 's' : ''}</span>
+        <h2 className="text-xl font-semibold text-white">Your Datasets</h2>
+        <span className="text-sm text-zinc-400">{datasets.length} dataset{datasets.length !== 1 ? 's' : ''}</span>
       </div>
 
       {datasetIdToDelete && (
@@ -75,53 +75,53 @@ export function DatasetList() {
             key={dataset.id}
             className="group block"
           >
-            <div className="bg-white border border-gray-300 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 hover:bg-zinc-800/50 transition-all duration-200">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-medium text-lg text-gray-900 truncate" title={dataset.name}>
+                    <FileText className="h-5 w-5 text-blue-400" />
+                    <h3 className="font-medium text-lg text-white truncate" title={dataset.name}>
                       {dataset.name}
                     </h3>
                   </div>
 
-                  <button className="text-gray-400 hover:text-gray-900 cursor-pointer" onClick={() => setDatasetIdToDelete(dataset.id)}>
+                  <button className="text-zinc-500 hover:text-zinc-300 cursor-pointer" onClick={() => setDatasetIdToDelete(dataset.id)}>
                     <Trash className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-zinc-300">
                   <HardDrive className="h-4 w-4" />
                   <span>{formatFileSize(dataset.size)}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
                   <FileText className="h-4 w-4" />
                   <span>{dataset.filename}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
                   <Calendar className="h-4 w-4" />
                   <span>Created {formatDate(dataset.created_at)}</span>
                 </div>
 
                 {dataset.updated_at !== dataset.created_at && (
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-zinc-400">
                     <Calendar className="h-4 w-4" />
                     <span>Updated {formatDate(dataset.updated_at)}</span>
                   </div>
                 )}
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="mt-4 pt-4 border-t border-zinc-800">
                 <Link href={`/${dataset.slug}`}>
-                  <div className="flex items-center justify-between hover:bg-blue-50 p-2 rounded-md text-blue-600">
+                  <div className="flex items-center justify-between hover:bg-zinc-800 p-2 rounded-md text-blue-400">
                     <span className="text-sm uppercase tracking-wide font-medium">
                       Abrir dataset
                     </span>
-                    <div className="text-blue-600 group-hover:text-blue-700">
+                    <div className="text-blue-400 group-hover:text-blue-300">
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>
@@ -156,18 +156,18 @@ function DeleteDatasetButton({
 
   return (
     <Dialog open={datasetToDelete !== null} onOpenChange={(open) => setDatasetToDelete(open ? datasetToDelete : null)}>
-      <DialogContent className="bg-white">
-        <DialogTitle>Delete Dataset</DialogTitle>
+      <DialogContent className="bg-zinc-900 border-zinc-800">
+        <DialogTitle className="text-white">Delete Dataset</DialogTitle>
 
-        <p className="text-gray-900">Are you sure you want to delete <span className="font-bold">{datasetToDelete}</span> dataset?</p>
+        <p className="text-zinc-300">Are you sure you want to delete <span className="font-bold text-white">{datasetToDelete}</span> dataset?</p>
 
-        {error && <p className="text-red-700">{error.message}</p>}
+        {error && <p className="text-red-400">{error.message}</p>}
 
         <div className="flex items-center justify-end gap-2">
-          <button className="bg-gray-100 text-gray-600 text-sm px-4 py-2 rounded-md cursor-pointer" onClick={() => setDatasetToDelete(null)}>Cancel</button>
+          <button className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm px-4 py-2 rounded-md cursor-pointer transition-colors" onClick={() => setDatasetToDelete(null)}>Cancel</button>
 
           <button
-            className="bg-red-100 hover:bg-red-200 flex items-center gap-2 transition-all duration-200 text-red-700 text-sm px-4 py-2 rounded-md cursor-pointer"
+            className="bg-red-900/50 hover:bg-red-900/70 border border-red-800 flex items-center gap-2 transition-all duration-200 text-red-300 text-sm px-4 py-2 rounded-md cursor-pointer"
             onClick={handleClick}
           >
             {isPending && <Loader2 className="h-4 w-4 animate-spin" />}

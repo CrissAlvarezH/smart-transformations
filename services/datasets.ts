@@ -22,6 +22,7 @@ export async function getDatasetById(db: PGLiteManager, id: number): Promise<Dat
   return result.rows[0];
 }
 
+
 export async function getDatasetBySlug(db: PGLiteManager, slug: string): Promise<DatasetTable> {
   const result = await db.query(`
     SELECT 
@@ -34,6 +35,7 @@ export async function getDatasetBySlug(db: PGLiteManager, slug: string): Promise
   }
   return result.rows[0];
 }
+
 
 export async function getDatasetDataPaginated(
   db: PGLiteManager,
@@ -231,17 +233,21 @@ export async function createBlankDatasetName(db: PGLiteManager) {
   } catch (error) {
     console.error('Error parsing last blank dataset number', lastBlankDatasetName, error);
   }
-  const newBlankDatasetName = `blank_${lastBlankDatasetNumber + 1}`;
+  const newBlankDatasetName = `Blank ${lastBlankDatasetNumber + 1}`;
   return newBlankDatasetName;
 }
 
 
 export async function createBlankDataset(
   db: PGLiteManager,
-) {
-  const tableName = await createBlankDatasetName(db);
-  await createDataset(db, 'Blank Dataset', 'blank', 'blank.csv', tableName, [], 0);
-  return tableName;
+): Promise<string> {
+  const blankFilename = 'blank.csv';
+  const datasetName = await generateUniqueDatasetNameFromFilename(db, blankFilename);
+  const tableName = generateTableNameFromFilename(blankFilename);
+  const slug = await generateUniqueSlugFromName(db, datasetName);
+  const id = await createDataset(db, datasetName, slug, blankFilename, tableName, [], 0, true);
+  await createDatasetVersion(db, id, `SELECT * FROM ${tableName}`);
+  return slug;
 }
 
 
@@ -252,27 +258,33 @@ export async function createDataset(
   filename: string,
   tableName: string,
   columns: string[],
-  size: number
+  size: number,
+  startedAsBlank: boolean = false
 ): Promise<number> {
   if (await validateTableNameExists(db, tableName)) {
     throw new Error(`Table name ${tableName} already exists`);
   }
 
+  const createTableColumns = [
+    '___index___ SERIAL PRIMARY KEY', // this is used internally to maintain the order and show in the dataset table
+    ...columns.map((column) => `${column} TEXT NOT NULL`)
+  ];
+
   await db.query(`
     CREATE TABLE IF NOT EXISTS ${tableName} (
-      ___index___ SERIAL PRIMARY KEY, -- this is used internally to maintain the order and show in the dataset table
-      ${columns.map((column) => `${column} TEXT NOT NULL`).join(', ')}
+      ${createTableColumns.join(', ')}
     )
   `);
 
   const result = await db.query(`
     INSERT INTO datasets 
-      (name, slug, table_name, columns, filename, size, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+      (name, slug, table_name, columns, filename, size, started_as_blank, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
     RETURNING id
-  `, [name, slug, tableName, columns, filename, size]);
+  `, [name, slug, tableName, columns, filename, size, startedAsBlank]);
   return result.rows[0].id;
 }
+
 
 export async function createDatasetVersion(
   db: PGLiteManager,
@@ -356,7 +368,6 @@ export async function checkIfDatasetNameIsInUse(db: PGLiteManager, name: string)
 }
 
 
-
 export async function generateUniqueSlugFromName(db: PGLiteManager, name: string) {
   // must be a valid URL part
   let slug =  (
@@ -388,7 +399,7 @@ export async function generateUniqueSlugFromName(db: PGLiteManager, name: string
 }
 
 
-export async function generateUniqueDatasetNameFromCSVFile(db: PGLiteManager, filename: string) {
+export async function generateUniqueDatasetNameFromFilename(db: PGLiteManager, filename: string) {
   let name = (
     filename
       .replace('.csv', '')
@@ -421,7 +432,7 @@ export async function generateUniqueDatasetNameFromCSVFile(db: PGLiteManager, fi
 }
 
 
-export function generateTableNameFromCSVFile(filename: string) {
+export function generateTableNameFromFilename(filename: string) {
   let tableName = (
     filename
       .replace('.csv', '') // 1. remove .csv
@@ -449,8 +460,8 @@ export async function insertCSVFileIntoDatabase(
   onProgress(0);
   const columns = csvFile.data.headers;
 
-  const datasetName = await generateUniqueDatasetNameFromCSVFile(db, csvFile.filename);
-  const tableName = generateTableNameFromCSVFile(csvFile.filename);
+  const datasetName = await generateUniqueDatasetNameFromFilename(db, csvFile.filename);
+  const tableName = generateTableNameFromFilename(csvFile.filename);
   const slug = await generateUniqueSlugFromName(db, datasetName);
 
   const datasetId = await createDataset(db, datasetName, slug, csvFile.filename, tableName, columns, csvFile.size);
@@ -489,6 +500,7 @@ export async function insertCSVFileIntoDatabase(
   return slug;
 }
 
+
 export function validateCSVFileData(data: CSVData): string | null {
   const MAX_ROWS = 1000;
 
@@ -504,10 +516,12 @@ export function validateCSVFileData(data: CSVData): string | null {
   return null;
 }
 
+
 export async function validateTableNameExists(db: PGLiteManager, tableName: string): Promise<boolean> {
   const result = await db.query(`SELECT COUNT(*) FROM datasets WHERE table_name = '${tableName}'`);
   return result.rows[0].count > 0;
 }
+
 
 export async function deleteDataset(db: PGLiteManager, datasetId: number) {
   const dataset = await getDatasetById(db, datasetId);

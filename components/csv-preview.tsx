@@ -22,16 +22,16 @@ export default function CSVPreview({ csvFile, onCancel }: CSVPreviewProps) {
 
   return (
     <div>
-      <div className="my-4 p-4 border bg-white border-gray-200 rounded-md">
+      <div className="my-4 p-4 border bg-zinc-900 border-zinc-800 rounded-md">
         <div className="flex items-center justify-between">
 
           <div className="flex items-center">
-            <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <svg className="h-5 w-5 text-zinc-400" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">{csvFile.filename}</p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm font-medium text-white">{csvFile.filename}</p>
+              <p className="text-sm text-zinc-400">
                 {(csvFile.size / 1024).toFixed(2)} KB
               </p>
             </div>
@@ -41,22 +41,22 @@ export default function CSVPreview({ csvFile, onCancel }: CSVPreviewProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-white">
             Preview
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-zinc-400">
             {csvFile.data.rows.length} rows × {csvFile.data.headers.length} columns
           </p>
         </div>
 
-        <div className="overflow-auto border border-gray-300 shadow-sm">
+        <div className="overflow-auto border border-gray-300 shadow-sm bg-white">
           <CSVTable csvData={{ headers, rows: displayRows }} />
         </div>
 
         {hasMoreRows && (
-          <div className="mt-4 text-center text-sm text-gray-500">
+          <div className="mt-4 text-center text-sm text-zinc-400">
             Showing first {maxRows} rows of {csvFile.data.rows.length} total rows
           </div>
         )}
@@ -80,9 +80,9 @@ function UseCSVFileButton({ csvFile, onCancel }: { csvFile: CSVFile, onCancel: (
 
   if (isProcessing) {
     return <div className="flex items-center gap-2">
-      <p className="text-sm text-green-700">{progress}%</p>
-      <Loader2 className="h-5 w-5 text-green-700 animate-spin" />
-      <p className="text-sm text-green-700">Processing file...</p>
+      <p className="text-sm text-green-400">{progress}%</p>
+      <Loader2 className="h-5 w-5 text-green-400 animate-spin" />
+      <p className="text-sm text-green-400">Processing file...</p>
     </div>;
   }
 
@@ -91,7 +91,7 @@ function UseCSVFileButton({ csvFile, onCancel }: { csvFile: CSVFile, onCancel: (
   if (progress === 100) {
     return (
       <div className="flex items-center gap-2">
-        <p className="text-sm text-green-700">File processed successfully</p>
+        <p className="text-sm text-green-400">File processed successfully</p>
       </div>
     )
   }
@@ -100,17 +100,17 @@ function UseCSVFileButton({ csvFile, onCancel }: { csvFile: CSVFile, onCancel: (
     <div className="flex items-center gap-4">
       <button
         onClick={onCancel}
-        className="text-gray-600 hover:bg-red-50 px-4 py-2 rounded-md cursor-pointer hover:text-red-500 transition-colors duration-200 font-medium text-sm"
+        className="text-zinc-400 hover:bg-red-900/20 hover:border-red-800 border border-zinc-700 px-4 py-2 rounded-md cursor-pointer hover:text-red-400 transition-colors duration-200 font-medium text-sm"
       >
         Discard
       </button>
 
       <button
-        className="flex items-center cursor-pointer border border-green-300 gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-md hover:text-green-700 text-sm font-medium "
+        className="flex items-center cursor-pointer border border-green-600 gap-2 text-green-400 bg-green-900/20 px-4 py-2 rounded-md hover:text-green-300 hover:bg-green-900/30 text-sm font-medium transition-colors duration-200"
         onClick={handleClick}
       >
         Use this file
-        <ArrowRightIcon className="h-5 w-5 text-green-500 " />
+        <ArrowRightIcon className="h-5 w-5 text-green-400" />
       </button>
     </div>
   )
@@ -119,8 +119,8 @@ function UseCSVFileButton({ csvFile, onCancel }: { csvFile: CSVFile, onCancel: (
 
 function ErrorState({ error }: { error: string }) {
   return (
-    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-      <p className="text-sm text-red-700">{error}</p>
+    <div className="p-3 bg-red-900/20 border border-red-800 rounded-md">
+      <p className="text-sm text-red-400">{error}</p>
     </div>
   )
 }
