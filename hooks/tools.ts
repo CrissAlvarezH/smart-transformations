@@ -1,6 +1,7 @@
 import { useApp } from "@/app/providers";
 import { ToolCall } from "@ai-sdk/provider-utils";
-import { createDatasetVersion, getDatasetDataPaginated } from "@/services/datasets";
+import { getDatasetDataPaginated } from "@/services/datasets";
+import { createDatasetVersion } from "@/services/versions";
 import { useQueryClient } from "@tanstack/react-query";
 import { DATASET_DATA, DATASET_VERSIONS } from "./query-keys";
 

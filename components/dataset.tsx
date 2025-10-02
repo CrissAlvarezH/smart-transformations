@@ -1,4 +1,5 @@
-import { useDatasetDataPaginated, useDatasetVersions, useRenameDataset } from "@/hooks/datasets";
+import { useDatasetDataPaginated, useRenameDataset } from "@/hooks/datasets";
+import { useDatasetVersions } from "@/hooks/versions";
 import { useEffect, useState } from "react";
 import CSVTable from "@/components/csv-table";
 import { CSVIcon } from "@/components/Icons";
