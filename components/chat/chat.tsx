@@ -147,6 +147,7 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
+                  if (status !== 'ready') return;
                   handleSubmit(e);
                 }
               }}
