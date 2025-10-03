@@ -59,66 +59,66 @@ export function DatasetList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white">Your Datasets</h2>
-        <span className="text-sm text-zinc-400">{datasets.length} dataset{datasets.length !== 1 ? 's' : ''}</span>
+        <h2 className="text-lg sm:text-xl font-semibold text-white">Your Datasets</h2>
+        <span className="text-xs sm:text-sm text-zinc-400">{datasets.length} dataset{datasets.length !== 1 ? 's' : ''}</span>
       </div>
 
       {datasetIdToDelete && (
         <DeleteDatasetButton datasetToDelete={datasetIdToDelete} setDatasetToDelete={setDatasetIdToDelete} />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
         {datasets.map((dataset) => (
           <div
             key={dataset.id}
             className="group block"
           >
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 hover:bg-zinc-800/50 transition-all duration-200">
-              <div className="flex items-start justify-between mb-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 sm:p-6 hover:border-zinc-700 hover:bg-zinc-800/50 transition-all duration-200">
+              <div className="flex items-start justify-between mb-3 sm:mb-4">
                 <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-blue-400" />
-                    <h3 className="font-medium text-lg text-white truncate" title={dataset.name}>
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 flex-shrink-0" />
+                    <h3 className="font-medium text-base sm:text-lg text-white truncate" title={dataset.name}>
                       {dataset.name}
                     </h3>
-                    <span className="text-sm text-zinc-400 rounded-full bg-zinc-800 px-2 py-1">v{dataset.lastVersion}</span>
+                    <span className="text-xs sm:text-sm text-zinc-400 rounded-full bg-zinc-800 px-2 py-1 flex-shrink-0">v{dataset.lastVersion}</span>
                   </div>
 
-                  <button className="text-zinc-500 hover:text-zinc-300 cursor-pointer" onClick={() => setDatasetIdToDelete(dataset.id)}>
+                  <button className="text-zinc-500 hover:text-zinc-300 cursor-pointer ml-2 flex-shrink-0" onClick={() => setDatasetIdToDelete(dataset.id)}>
                     <Trash className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 text-sm text-zinc-300">
-                  <HardDrive className="h-4 w-4" />
-                  <span>{formatFileSize(dataset.size)}</span>
+                  <HardDrive className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">{formatFileSize(dataset.size)}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-zinc-400">
-                  <FileText className="h-4 w-4" />
-                  <span>{dataset.filename}</span>
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="truncate">{dataset.filename}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-zinc-400">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>Created {formatDate(dataset.created_at)}</span>
                 </div>
 
                 {dataset.updated_at !== dataset.created_at && (
                   <div className="flex items-center gap-2 text-xs text-zinc-400">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>Updated {formatDate(dataset.updated_at)}</span>
                   </div>
                 )}
               </div>
 
-              <div className="mt-4 pt-4 border-t border-zinc-800">
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-zinc-800">
                 <Link href={`/${dataset.slug}`}>
                   <div className="flex items-center justify-between hover:bg-zinc-800 p-2 rounded-md text-blue-400">
-                    <span className="text-sm uppercase tracking-wide font-medium">
-                      Abrir dataset
+                    <span className="text-xs sm:text-sm uppercase tracking-wide font-medium">
+                      Open Dataset
                     </span>
                     <div className="text-blue-400 group-hover:text-blue-300">
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,18 +155,23 @@ function DeleteDatasetButton({
 
   return (
     <Dialog open={datasetToDelete !== null} onOpenChange={(open) => setDatasetToDelete(open ? datasetToDelete : null)}>
-      <DialogContent className="bg-zinc-900 border-zinc-800">
-        <DialogTitle className="text-white">Delete Dataset</DialogTitle>
+      <DialogContent className="bg-zinc-900 border-zinc-800 max-w-sm sm:max-w-md mx-4">
+        <DialogTitle className="text-white text-lg sm:text-xl">Delete Dataset</DialogTitle>
 
-        <p className="text-zinc-300">Are you sure you want to delete <span className="font-bold text-white">{datasetToDelete}</span> dataset?</p>
+        <p className="text-zinc-300 text-sm sm:text-base">Are you sure you want to delete <span className="font-bold text-white">{datasetToDelete}</span> dataset?</p>
 
-        {error && <p className="text-red-400">{error.message}</p>}
+        {error && <p className="text-red-400 text-sm">{error.message}</p>}
 
-        <div className="flex items-center justify-end gap-2">
-          <button className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm px-4 py-2 rounded-md cursor-pointer transition-colors" onClick={() => setDatasetToDelete(null)}>Cancel</button>
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-2 pt-2">
+          <button 
+            className="w-full sm:w-auto bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm px-4 py-2 rounded-md cursor-pointer transition-colors order-2 sm:order-1" 
+            onClick={() => setDatasetToDelete(null)}
+          >
+            Cancel
+          </button>
 
           <button
-            className="bg-red-900/50 hover:bg-red-900/70 border border-red-800 flex items-center gap-2 transition-all duration-200 text-red-300 text-sm px-4 py-2 rounded-md cursor-pointer"
+            className="w-full sm:w-auto bg-red-900/50 hover:bg-red-900/70 border border-red-800 flex items-center justify-center gap-2 transition-all duration-200 text-red-300 text-sm px-4 py-2 rounded-md cursor-pointer order-1 sm:order-2"
             onClick={handleClick}
           >
             {isPending && <Loader2 className="h-4 w-4 animate-spin" />}

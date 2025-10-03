@@ -4,6 +4,8 @@ import { useState, useCallback, useRef } from 'react';
 import Papa from 'papaparse';
 import { CSVIcon } from '@/components/Icons';
 import { validateCSVFileData } from '@/services/datasets';
+import { Button } from '@/components/ui/button';
+import { Upload, FileText } from 'lucide-react';
 
 export interface CSVFile {
   filename: string;
@@ -24,6 +26,7 @@ export default function CSVUploader({ onFileUploaded }: CSVUploaderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = (text: string): CSVData => {
@@ -106,6 +109,7 @@ export default function CSVUploader({ onFileUploaded }: CSVUploaderProps) {
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
+      setSelectedFile(files[0]);
       handleFile(files[0]);
     }
   }, [handleFile]);
@@ -120,11 +124,12 @@ export default function CSVUploader({ onFileUploaded }: CSVUploaderProps) {
         className="hidden"
       />
       
+      {/* Desktop: Drag & Drop Interface */}
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer group ${
+        className={`hidden sm:block relative border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer group ${
           isDragActive
             ? 'border-green-400 bg-green-400/10'
             : 'border-zinc-700 hover:border-green-400 hover:bg-green-400/5'
@@ -154,6 +159,42 @@ export default function CSVUploader({ onFileUploaded }: CSVUploaderProps) {
             <p className="text-sm text-green-400">Processing...</p>
           </div>
         )}
+      </div>
+
+      {/* Mobile: Button Interface */}
+      <div className="block sm:hidden space-y-4">
+        <div className="text-center space-y-4">
+          {selectedFile && !isLoading && (
+            <div className="bg-zinc-800 rounded-lg p-3 text-sm">
+              <div className="flex items-center justify-center space-x-2 text-green-400">
+                <FileText className="w-4 h-4" />
+                <span className="truncate max-w-[200px]">{selectedFile.name}</span>
+              </div>
+              <p className="text-zinc-400 text-xs mt-1">
+                {(selectedFile.size / 1024).toFixed(1)} KB
+              </p>
+            </div>
+          )}
+
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+            className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-medium"
+            size="lg"
+          >
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Processing...</span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Upload className="w-5 h-5" />
+                <span>{selectedFile ? 'Select Different File' : 'Select CSV File'}</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </div>
 
       {error && <ErrorState error={error} />}
