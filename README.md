@@ -2,7 +2,7 @@
 
 🌐 **Live Demo**: [smart-transformations.alvarezcristian.com](https://smart-transformations.alvarezcristian.com)
 
-<img src="docs/imgs/trailer.gif" alt="Trailer" width="900" height="506" />
+![Trailer](docs/imgs/trailer.gif)
 
 
 ## Description
