@@ -130,7 +130,6 @@ export async function resetDatasetToVersion(
       AND version > '${targetVersion}'
   `);
   for (const version of versionsToDelete.rows) {
-    console.log('deleting version', version);
     await db.query(`DROP TABLE IF EXISTS ${version.table_name}`);
     await db.query(`
       DELETE FROM dataset_versions 

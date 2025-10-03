@@ -69,9 +69,6 @@ export const generateTransformationSql = (datasetContext: RequestDatasetContext)
         Please generate the sql query to perform the requested transformation.
       `
 
-      console.log('generate_transformation_sql systemPrompt', systemPrompt);
-      console.log('generate_transformation_sql userPrompt', userPrompt);
-
       const result = await generateObject({
         model: openai('gpt-4.1'),
         system: systemPrompt,

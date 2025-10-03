@@ -38,8 +38,6 @@ export async function POST(req: Request) {
     - DO NOT SHOW THE SQL QUERY TO THE USER.
   `;
 
-  console.log('systemPrompt', systemPrompt);
-
   const result = streamText({
     model: openai('gpt-4.1'),
     system: systemPrompt,
