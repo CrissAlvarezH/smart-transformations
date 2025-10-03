@@ -1,9 +1,9 @@
 import { useDatasetDataPaginated, useRenameDataset } from "@/hooks/datasets";
-import { useDatasetVersions } from "@/hooks/versions";
+import { useDatasetVersions, useResetDatasetToVersion } from "@/hooks/versions";
 import { useEffect, useState } from "react";
 import CSVTable from "@/components/csv-table";
 import { CSVIcon } from "@/components/Icons";
-import { ArrowLeftIcon, ArrowRightIcon, Edit, FileText, Loader2, Save, X } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, Edit, FileText, Loader2, RotateCcw, Save, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { useWorkspace } from "@/app/[slug]/providers";
@@ -22,11 +22,7 @@ export function Dataset({ dataset }: DatasetProps) {
   const { selectedDatasetVersion } = useWorkspace();
   const { data, isLoading, isFetching, isPending, error } = useDatasetDataPaginated(dataset.id, page, selectedDatasetVersion);
 
-  useEffect(() => {
-    console.log('selectedDatasetVersion', selectedDatasetVersion);
-  }, [selectedDatasetVersion]);
-
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div className="text-red-700">Error: {error.message}</div>;
 
   const convertToCSVData = (data: any) => {
     return {
@@ -49,6 +45,7 @@ export function Dataset({ dataset }: DatasetProps) {
           />
 
           <div className="flex-1 overflow-auto">
+
             {isBlank ? (
               <div className="pt-24 text-center flex flex-col gap-2 items-center justify-center">
                 <FileText className="w-12 h-12 text-gray-300 mb-2" />
@@ -110,6 +107,9 @@ function VersionSelector({ datasetId }: { datasetId: number }) {
     error: versionsError,
   } = useDatasetVersions(datasetId);
   const { selectedDatasetVersion, selectDatasetVersion } = useWorkspace();
+  const {
+    mutateAsync: resetDatasetToVersion, isPending: isResettingPending, error: resetError
+  } = useResetDatasetToVersion();
 
   useEffect(() => {
     if (!versions) return;
@@ -128,26 +128,46 @@ function VersionSelector({ datasetId }: { datasetId: number }) {
     return <div>No versions found</div>;
   }
 
+  const handleResetDatasetToVersion = async (targetVersion: string) => {
+    await resetDatasetToVersion({ datasetId, targetVersion });
+  }
+
+  const isTheLatestVersion = selectedDatasetVersion === versions.rows[0].version.toString();
   return (
-    <Select
-      defaultValue={selectedDatasetVersion}
-      value={selectedDatasetVersion}
-      onValueChange={(value) => selectDatasetVersion(value.toString())}
-    >
-      <SelectTrigger>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {versions.rows.map((version) => (
-          <SelectItem
-            key={version.version}
-            value={version.version.toString()}
+    <div className="flex items-center gap-2">
+      <Select
+        defaultValue={selectedDatasetVersion}
+        value={selectedDatasetVersion}
+        onValueChange={(value) => selectDatasetVersion(value.toString())}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {versions.rows.map((version) => (
+            <SelectItem
+              key={version.version}
+              value={version.version.toString()}
+            >
+              Version {version.version}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {!isTheLatestVersion && (
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" className="cursor-pointer"
+            onClick={() => handleResetDatasetToVersion(selectedDatasetVersion)}
+            disabled={isResettingPending}
           >
-            Version {version.version}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+            {isResettingPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+            Reset to this version
+          </Button>
+          {resetError && <span className="text-red-700 text-xs">{resetError.message}</span>}
+        </div>
+      )}
+    </div>
   )
 }
 

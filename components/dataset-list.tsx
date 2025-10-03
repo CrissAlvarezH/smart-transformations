@@ -6,10 +6,11 @@ import Link from "next/link";
 import { FileText, Database, Calendar, HardDrive, Loader2, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
+import { DatasetItem } from "@/services/datasets";
 
 
 export function DatasetList() {
-  const { data, isLoading, isError } = useDatasets();
+  const { data: datasets, isLoading, isError } = useDatasets();
   const [datasetIdToDelete, setDatasetIdToDelete] = useState<number | null>(null);
 
   if (isLoading) {
@@ -33,12 +34,9 @@ export function DatasetList() {
     );
   }
 
-  if (!data || data.rows.length === 0) {
-    // TODO give the option to a uset to use a predefine dataset
+  if (!datasets || datasets.length === 0) {
     return null;
   }
-
-  const datasets = data.rows as DatasetTable[];
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -83,6 +81,7 @@ export function DatasetList() {
                     <h3 className="font-medium text-lg text-white truncate" title={dataset.name}>
                       {dataset.name}
                     </h3>
+                    <span className="text-sm text-zinc-400 rounded-full bg-zinc-800 px-2 py-1">v{dataset.lastVersion}</span>
                   </div>
 
                   <button className="text-zinc-500 hover:text-zinc-300 cursor-pointer" onClick={() => setDatasetIdToDelete(dataset.id)}>

@@ -107,10 +107,10 @@ export default function CSVTable({ csvData}: CSVTableProps) {
                   key={cellIndex}
                   className="h-6 border border-gray-300 text-xs text-gray-900 px-2 py-1 hover:bg-blue-50 focus:bg-blue-100 cursor-cell"
                   style={{ width: columnWidths[cellIndex] }}
-                  title={cell.toString()} // Show full content on hover
+                  title={cell === undefined || cell === null ? 'NULL' : cell.toString()} // Show full content on hover
                 >
                   <div className="truncate">
-                    {cell.toString()}
+                    {cell === undefined || cell === null ? 'NULL' : cell.toString()}
                   </div>
                 </td>
               ))}

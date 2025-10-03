@@ -40,12 +40,13 @@ export async function getDatasetSchemaByVersion(
 
 export async function getLastesDatasetVersionSchema(
   db: PGLiteManager, datasetId: number
-): Promise<{ tableName: string, columns: string[] }> {
+): Promise<{ tableName: string, columns: string[], version: number }> {
   let versionTableName = null;
   let columns = [];
+  let version = null;
 
   const result = await db.query(`
-    SELECT table_name, columns FROM dataset_versions 
+    SELECT table_name, columns, version FROM dataset_versions 
     WHERE dataset_id = '${datasetId}' 
     ORDER BY created_at DESC 
     LIMIT 1
@@ -54,7 +55,7 @@ export async function getLastesDatasetVersionSchema(
   if (result.rows.length > 0) {
     versionTableName = result.rows[0].table_name;
     columns = result.rows[0].columns;
-
+    version = result.rows[0].version;
   } else {
     // use the original table name if there arent any versions
     const dataset = await getDatasetById(db, datasetId);
@@ -65,6 +66,7 @@ export async function getLastesDatasetVersionSchema(
   return {
     tableName: versionTableName,
     columns,
+    version,
   };
 }
 
@@ -113,4 +115,27 @@ export async function createDatasetVersion(
     INSERT INTO dataset_versions (table_name, columns, version, dataset_id, created_at)
     VALUES ($1, $2, $3, $4, NOW())
   `, [newVersionTableName, columnNames, newVersionNumber, datasetId]);
+}
+
+
+export async function resetDatasetToVersion(
+  db: PGLiteManager,
+  datasetId: number,
+  targetVersion: string,
+) {
+  // delete all the version after the target version
+  const versionsToDelete = await db.query(`
+    SELECT table_name, version FROM dataset_versions 
+    WHERE dataset_id = '${datasetId}' 
+      AND version > '${targetVersion}'
+  `);
+  for (const version of versionsToDelete.rows) {
+    console.log('deleting version', version);
+    await db.query(`DROP TABLE IF EXISTS ${version.table_name}`);
+    await db.query(`
+      DELETE FROM dataset_versions 
+      WHERE dataset_id = '${datasetId}' 
+        AND version = '${version.version}'
+    `);
+  }
 }

@@ -7,12 +7,6 @@ import {
 } from "@/services/naming";
 
 
-export interface DatasetDataPaginated {
-  data: any;
-  total: number;
-  version: { tableName: string };
-}
-
 export async function getDatasetById(db: PGLiteManager, id: number): Promise<DatasetTable> {
   const result = await db.query(`
     SELECT 
@@ -40,6 +34,12 @@ export async function getDatasetBySlug(db: PGLiteManager, slug: string): Promise
   return result.rows[0];
 }
 
+
+export interface DatasetDataPaginated {
+  data: any;
+  total: number;
+  version: { tableName: string };
+}
 
 export async function getDatasetDataPaginated(
   db: PGLiteManager,
@@ -88,8 +88,24 @@ export async function getDatasetDataPaginated(
 }
 
 
-export async function listDatasets(db: PGLiteManager) {
-  return await db.query(`SELECT * FROM datasets`);
+export interface DatasetItem extends DatasetTable {
+  lastVersion: number;
+}
+
+export async function listDatasets(db: PGLiteManager): Promise<DatasetItem[]> {
+  const result = await db.query(`
+    SELECT 
+      d.id, d.slug, d.name, d.table_name, d.columns, d.filename, 
+      d.size, d.started_as_blank, d.created_at, d.updated_at
+    FROM datasets d
+    ORDER BY d.created_at DESC
+  `);
+
+  for (const row of result.rows) {
+    const version = await getLastesDatasetVersionSchema(db, row.id);
+    row.lastVersion = version.version;
+  }
+  return result.rows;
 }
 
 

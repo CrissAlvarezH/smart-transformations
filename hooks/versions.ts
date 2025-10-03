@@ -1,7 +1,7 @@
 import { useApp } from "@/app/providers";
-import { useQuery } from "@tanstack/react-query";
-import { DATASET_VERSIONS } from "./query-keys";
-import { listDatasetVersions } from "@/services/versions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { DATASET_VERSIONS, DATASETS } from "./query-keys";
+import { listDatasetVersions, resetDatasetToVersion } from "@/services/versions";
 
 
 export const useDatasetVersions = (datasetId: number) => {
@@ -15,4 +15,23 @@ export const useDatasetVersions = (datasetId: number) => {
   });
 
   return { data, isLoading, isFetching, isPending, error };
+}
+
+
+export const useResetDatasetToVersion = () => {
+  const { db } = useApp();
+  const queryClient = useQueryClient();
+
+  const { mutate, mutateAsync, isPending, error } = useMutation({
+    mutationFn: async ({ datasetId, targetVersion }: { datasetId: number, targetVersion: string }) => {
+      await resetDatasetToVersion(db, datasetId, targetVersion);
+    },
+    onSuccess: (_, vars) => {
+      const { datasetId } = vars;
+      queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, datasetId] });
+      queryClient.invalidateQueries({ queryKey: [DATASETS] });
+    }
+  });
+
+  return { mutate, mutateAsync, isPending, error };
 }
