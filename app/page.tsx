@@ -29,7 +29,7 @@ export default function Home() {
               <UploadCSVCard onFileUploaded={handleFileUploaded} />
             </div>
 
-            <GifTrailer />
+            <VideoTrailer />
             <DatasetList />
           </div>
         )}
@@ -117,23 +117,16 @@ function UploadCSVCard({ onFileUploaded }: { onFileUploaded: (data: CSVFile) => 
   );
 }
 
-function GifTrailer() {
+
+function VideoTrailer() {
   return (
     <div className="mb-6 sm:mb-8 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
       <div className="p-4 sm:p-6 border-b border-zinc-800">
         <h3 className="text-lg sm:text-xl font-semibold text-white text-center sm:text-left">See It In Action</h3>
       </div>
       <div className="relative">
-        <Image
-          src="/trailer.gif"
-          alt="Smart Data Transformations Demo"
-          width={896}
-          height={504}
-          className="w-full h-auto"
-          priority={false}
-        />
+        <video src="/trailer.mp4" autoPlay muted loop controls className="w-full h-auto" />
       </div>
     </div>
   );
 }
-
