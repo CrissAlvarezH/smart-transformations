@@ -50,7 +50,7 @@ export function Dataset({ dataset }: DatasetProps) {
               <div className="pt-24 text-center flex flex-col gap-2 items-center justify-center">
                 <FileText className="w-12 h-12 text-gray-300 mb-2" />
                 <p className="text-xl font-bold text-gray-800">This dataset is empty</p>
-                <p className="text-gray-400">You can tell the AI to fill it up for you with the data you want</p>
+                <p className="text-gray-400 px-10">You can tell the AI to fill it up for you with the data you want</p>
               </div>
             ) : (
               <CSVTable csvData={convertToCSVData(data.data)} />
@@ -82,7 +82,7 @@ function TableToolbar({
 
         <div className="flex items-center gap-2">
           <CSVIcon className="h-5 w-5 text-gray-700 mx-2" />
-          <h1 className="text-gray-700">{dataset.name}</h1>
+          <h1 className="text-gray-700 truncate max-w-20 sm:max-w-none">{dataset.name}</h1>
           <RenameDatasetButton dataset={dataset} />
         </div>
 
@@ -149,7 +149,13 @@ function VersionSelector({ datasetId }: { datasetId: number }) {
               key={version.version}
               value={version.version.toString()}
             >
-              Version {version.version}
+              {/* In desktop make it longer */}
+              <span className="hidden sm:block">
+                Version {version.version}
+              </span>
+              <span className="block sm:hidden">
+                V{version.version}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
@@ -221,7 +227,11 @@ function Pagination({
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-sm text-gray-500">{page} of {total} pages</span>
+
+      {/* In mobile make it shorter */}
+      <span className="text-sm text-gray-500 block sm:hidden">{page} of {total}</span>
+      <span className="text-sm text-gray-500 hidden sm:block">{page} of {total} pages</span>
+
       <button
         className="text-sm text-gray-500 disabled:opacity-60 flex items-center enabled:hover:bg-gray-100 rounded-md p-1 gap-2 enabled:cursor-pointer"
         onClick={() => onPageChange(page - 1)}

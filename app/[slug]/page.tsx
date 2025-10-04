@@ -33,20 +33,29 @@ export default function DatasetPage() {
 
 function Loading() {
   return (
-    <div className="flex h-screen">
-      {/* the chat part */}
-      <div className="w-[500px] flex-shrink-0 h-full">
-        <div className="flex flex-col items-center gap-2 bg-black h-full justify-center">
-          <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-          <span className="text-gray-500">Loading...</span>
-        </div>
+    <div>
+      {/* mobile */}
+      <div className="flex sm:hidden flex-col items-center gap-2 bg-black h-screen justify-center">
+        <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+        <span className="text-gray-500">Loading...</span>
       </div>
-    
-      {/* the dataset part */}
-      <div className="flex-1 h-full flex flex-col overflow-auto bg-white">
-        <div className="flex flex-col items-center gap-2 bg-white h-full justify-center">
-          <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-          <span className="text-gray-500">Loading...</span>
+
+      {/* desktop */}
+      <div className="hidden sm:flex h-screen">
+        {/* the chat part */}
+        <div className="w-[500px] flex-shrink-0 h-full">
+          <div className="flex flex-col items-center gap-2 bg-black h-full justify-center">
+            <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+            <span className="text-gray-500">Loading...</span>
+          </div>
+        </div>
+
+        {/* the dataset part */}
+        <div className="flex-1 h-full flex flex-col overflow-auto bg-white">
+          <div className="flex flex-col items-center gap-2 bg-white h-full justify-center">
+            <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+            <span className="text-gray-500">Loading...</span>
+          </div>
         </div>
       </div>
     </div>
