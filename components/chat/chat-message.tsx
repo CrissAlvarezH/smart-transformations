@@ -5,13 +5,15 @@ import { Markdown } from "../markdown";
 
 import { ChevronDown, Bolt, Wrench, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 
 interface ChatMessageProps {
+  isChatReady: boolean
   message: UIMessage;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, isChatReady }: ChatMessageProps) {
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div
@@ -21,26 +23,31 @@ export function ChatMessage({ message }: ChatMessageProps) {
           }`}
       >
         {message.parts.map((part, index) => {
+          if (part.type === "text") { // it is the message part
+            return message.role === 'user' ? (
+              <p key={index} className="whitespace-pre-wrap break-words">{part.text}</p>
+            ) : (
+              <div key={index} className="py-2">
+                <Markdown>{part.text}</Markdown>
+              </div>
+            );
+          }
+          // It is a tool part
+
+          const isTheLastPart = index === message.parts.length - 1;
+
           switch (part.type) {
-            case 'text':
-              return message.role === 'user' ? (
-                <p key={index} className="whitespace-pre-wrap break-words">{part.text}</p>
-              ) : (
-                <div key={index} className="py-2">
-                  <Markdown>{part.text}</Markdown>
-                </div>
-              );
             case 'tool-describe_dataset': {
-              return <GenericToolPart key={index} part={part} />;
+              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
             }
             case 'tool-get_dataset_sample': {
-              return <GenericToolPart key={index} part={part} />;
+              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
             }
             case 'tool-generate_transformation_sql': {
-              return <GenericToolPart key={index} part={part} />;
+              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
             }
             case 'tool-create_transformation': {
-              return <GenericToolPart key={index} part={part} />;
+              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
             }
             default:
               return null;
@@ -51,7 +58,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
   )
 }
 
-function GenericToolPart({ part }: { part: any }) {
+function GenericToolPart({ part, isLoading }: { part: any, isLoading: boolean }) {
   const { state, input, output } = part;
   const typeSplit = part.type.split('-');
   const toolName = typeSplit.length > 1 ? typeSplit[1] : part.type;
@@ -77,11 +84,11 @@ function GenericToolPart({ part }: { part: any }) {
     <div className="py-2 w-full">
       <div className="flex items-center justify-between gap-2 w-full">
         <div className="flex items-center gap-2">
-          <Bolt className="w-4 h-4" />
+          <Bolt className={cn("w-4 h-4", isLoading && "animate-spin")} />
           <div className="flex gap-2 items-center">
             <span className="font-semibold text-xs text-zinc-100">{toolNameTranslated}</span>
 
-            {state !== 'output-available' && <Loader2 className="w-3 h-3 animate-spin" />}
+            {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
             {state !== 'output-available' && <span className="text-zinc-400 text-xs">{label}</span>}
           </div>
         </div>
