@@ -5,6 +5,21 @@ import { generateObject } from "ai";
 import { RequestDatasetContext } from "./route";
 
 
+export const queryData = (datasetContext: RequestDatasetContext) => tool({
+    description: [
+      'Query the dataset data, execute a SQL query in pglite and return the result.',
+      'Use this tool when you need to get data from the dataset to analyze.',
+      'The query must have a limit of 100 rows maximum.'
+    ].join('\n'),
+    inputSchema: z.object({
+      sql: z.string().describe('The SQL query to execute in pglite to query the dataset data.'),
+    }),
+    outputSchema: z.object({
+      data: z.array(z.array(z.string())).describe('The result of the SQL query executed in pglite.'),
+    }),
+})
+
+
 export const applyTransformation = (datasetContext: RequestDatasetContext) => tool({
     description: 'Create a transformation in the database.',
     inputSchema: z.object({
