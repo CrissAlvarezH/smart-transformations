@@ -1,6 +1,6 @@
 import { useApp } from "@/app/providers";
 import { ToolCall } from "@ai-sdk/provider-utils";
-import { getDatasetDataPaginated } from "@/services/datasets";
+import { getDatasetDataPaginated, queryDatasetData } from "@/services/datasets";
 import { createDatasetVersion } from "@/services/versions";
 import { useQueryClient } from "@tanstack/react-query";
 import { DATASET_DATA, DATASET_VERSIONS, DATASETS } from "./query-keys";
@@ -39,6 +39,24 @@ export const useOnToolCall = (datasetId: number) => {
         queryClient.invalidateQueries({ queryKey: [DATASET_DATA, datasetId] });
         queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, datasetId] });
         return { success: true };
+
+      case 'query_data':
+        try {
+          const result = await queryDatasetData(db, toolCall.input.sql);
+
+          // the output must be array of arrays of strings, exampel [[1, 2, 3], [4, 5, 6]]
+          return {
+            data: result.map((row: any) => Object.values(row)),
+            columns: Object.keys(result[0]),
+          };
+
+        } catch (error) {
+          console.error('Error querying dataset data', error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to query dataset data',
+          };
+        }
     }
   };
 

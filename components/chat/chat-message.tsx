@@ -37,10 +37,7 @@ export function ChatMessage({ message, isChatReady }: ChatMessageProps) {
           const isTheLastPart = index === message.parts.length - 1;
 
           switch (part.type) {
-            case 'tool-describe_dataset': {
-              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
-            }
-            case 'tool-get_dataset_sample': {
+            case 'tool-query_data': {
               return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
             }
             case 'tool-generate_transformation_sql': {
@@ -73,8 +70,7 @@ function GenericToolPart({ part, isLoading }: { part: any, isLoading: boolean })
   }
   const label = labelTranslator[state];
   const toolNameTranslator: Record<string, string> = {
-    'describe_dataset': 'Describing dataset',
-    'get_dataset_sample': 'Getting dataset sample',
+    'query_data': 'Querying dataset data',
     'generate_transformation_sql': 'Generating tranformation',
     'create_transformation': 'Applying transformation',
   }

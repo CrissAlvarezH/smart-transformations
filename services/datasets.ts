@@ -257,3 +257,18 @@ export async function deleteDataset(db: PGLiteManager, datasetId: number) {
   await db.query(`DROP TABLE IF EXISTS ${dataset.table_name}`);
   await db.query(`DELETE FROM datasets WHERE id = '${datasetId}'`);
 }
+
+
+export async function queryDatasetData(
+  db: PGLiteManager,
+  sql: string
+): Promise<any[]> {
+  const result = await db.query(`
+    WITH original_query AS (
+      ${sql}
+    )
+    SELECT * FROM original_query
+    LIMIT 100
+  `);
+  return result.rows;
+}
