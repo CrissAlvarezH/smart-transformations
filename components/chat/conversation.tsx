@@ -56,9 +56,16 @@ export function Conversation({
     scrollContainer.addEventListener('scroll', handleScroll);
 
     // Create a MutationObserver to watch for changes in the content
-    const observer = new MutationObserver(() => {
-      // Small delay to ensure DOM is updated
-      setTimeout(scrollToBottom, 50);
+    const observer = new MutationObserver((mutations) => {
+      // Only trigger scrolling if there are actual content changes (not attribute changes)
+      const hasContentChanges = mutations.some(mutation => 
+        mutation.type === 'childList' && mutation.addedNodes.length > 0
+      );
+      
+      if (hasContentChanges) {
+        // Small delay to ensure DOM is updated
+        setTimeout(scrollToBottom, 50);
+      }
     });
 
     // Start observing the content container
@@ -66,7 +73,8 @@ export function Conversation({
       observer.observe(contentRef.current, {
         childList: true,
         subtree: true,
-        characterData: true
+        // Removed characterData: true to prevent excessive triggering
+        // characterData: true
       });
     }
 

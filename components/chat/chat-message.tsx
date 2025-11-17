@@ -4,12 +4,13 @@ import { UIMessage } from "@ai-sdk/react";
 import { Markdown } from "../markdown";
 
 import { ChevronDown, Bolt, Wrench, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { cn } from "@/lib/utils";
-import { useExecuteQuery } from "@/hooks/datasets";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useChartData } from "@/hooks/chart";
 
+// Move colors outside component to prevent recreation on every render
+const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff6384', '#36a2eb'];
 
 interface ChatMessageProps {
   isChatReady: boolean
@@ -135,29 +136,37 @@ function LinesChartTool({ part, isLoading }: { part: any, isLoading: boolean }) 
     return <div>Error: missing input</div>;
   }
 
+  // Memoize props to prevent unnecessary re-renders
+  const chartProps = useMemo(() => ({
+    chartTableName: output.chart.tableName,
+    xAxisName: input.xAxisName,
+    linesNames: input.linesNames
+  }), [output.chart.tableName, input.xAxisName, JSON.stringify(input.linesNames)]);
+
   return <LinesChart 
-    chartTableName={output.chart.tableName} 
-    xAxisName={input.xAxisName} 
-    linesNames={input.linesNames} 
+    chartTableName={chartProps.chartTableName} 
+    xAxisName={chartProps.xAxisName} 
+    linesNames={chartProps.linesNames} 
   />;
 }
 
 
-function LinesChart({ 
+const LinesChart = memo(function LinesChart({ 
   chartTableName, xAxisName, linesNames 
 }: { 
   chartTableName: string, 
   xAxisName: string, 
   linesNames: string[] 
 }) {
+  // Memoize the linesNames array to prevent recreation on every render
+  const memoizedLinesNames = useMemo(() => linesNames, [linesNames.join(',')]);
+  
   const { data, isLoading: isLoadingChart, isError, error } = useChartData(chartTableName);
   if (isLoadingChart) {
     return <div>Loading...</div>;
   } else if (isError) {
     return <div>Error: {error?.message ?? 'Unknown error'}</div>;
   }
-
-  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff6384', '#36a2eb'];
 
   return (
     <div className="w-full overflow-auto">
@@ -172,11 +181,11 @@ function LinesChart({
         <Tooltip />
         <Legend />
 
-        {linesNames.map((lineName: string, index: number) => (
-          <Line key={lineName} type="monotone" dataKey={lineName} stroke={colors[index % colors.length]} activeDot={{ r: 8 }} />
+        {memoizedLinesNames.map((lineName: string, index: number) => (
+          <Line key={lineName} type="monotone" dataKey={lineName} stroke={CHART_COLORS[index % CHART_COLORS.length]} activeDot={{ r: 8 }} />
         ))}
       </LineChart>
     </div>
 
   )
-}
+});
