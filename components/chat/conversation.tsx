@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import { UIMessage } from "@ai-sdk/react";
 
 /**
@@ -17,8 +17,11 @@ export function Conversation({
 }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const lastMessageIdRef = useRef<string | null>(null);
+  const lastContentHeightRef = useRef(0);
+  const hasInitiallyPositionedRef = useRef(false);
 
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -42,6 +45,70 @@ export function Conversation({
       scrollContainer.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Add ResizeObserver for initial loading period (first 5 seconds)
+  useEffect(() => {
+    const contentElement = contentRef.current;
+    const scrollContainer = scrollContainerRef.current;
+    if (!contentElement || !scrollContainer) return;
+
+    // Observer for initial loading period - always scroll to bottom on resize
+    const initialLoadObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      });
+    });
+
+    // Observer for after initial loading - respects user scroll position
+    const normalObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const newHeight = entry.contentRect.height;
+        const previousHeight = lastContentHeightRef.current;
+        
+        // Only scroll if content has grown and user was near bottom
+        if (newHeight > previousHeight && shouldAutoScrollRef.current) {
+          requestAnimationFrame(() => {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+          });
+        }
+        
+        lastContentHeightRef.current = newHeight;
+      }
+    });
+
+    // Start with initial load observer
+    initialLoadObserver.observe(contentElement);
+    
+    // Switch to normal observer after 5 seconds
+    const switchTimeout = setTimeout(() => {
+      initialLoadObserver.disconnect();
+      lastContentHeightRef.current = contentElement.scrollHeight; // Set baseline
+      normalObserver.observe(contentElement);
+    }, 5000);
+
+    // Cleanup observers on unmount
+    return () => {
+      clearTimeout(switchTimeout);
+      initialLoadObserver.disconnect();
+      normalObserver.disconnect();
+    };
+  }, []);
+
+  // Set initial scroll position to bottom immediately when content is ready (before paint)
+  useLayoutEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer && messages && messages.length > 0 && !hasInitiallyPositionedRef.current) {
+      // Temporarily disable smooth scrolling for instant positioning
+      const originalScrollBehavior = scrollContainer.style.scrollBehavior;
+      scrollContainer.style.scrollBehavior = 'auto';
+      
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      hasInitiallyPositionedRef.current = true;
+      
+      // Restore smooth scrolling
+      scrollContainer.style.scrollBehavior = originalScrollBehavior;
+    }
+  }, [messages]); // Run when messages change until initial positioning is done
 
   // Handle all scroll management based on messages
   useEffect(() => {
@@ -93,7 +160,7 @@ export function Conversation({
         scrollBehavior: 'smooth',
         overscrollBehavior: 'contain'
       }}>
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div ref={contentRef} className="max-w-4xl mx-auto space-y-4">
         {children}
         <div ref={messagesEndRef} className="h-4" />
       </div>
