@@ -189,6 +189,19 @@ export interface MessageTable {
   dataset_id: number;
 }
 
+export interface ChartTable {
+  id: number;
+  title: string;
+  sql: string;
+  chart_type: string;
+  chart_arguments: any;
+  is_saved: boolean;
+  table_name: string;
+  table_columns: string[];
+  dataset_id: number;
+  created_at: string;
+}
+
 export async function runMigrations() {
   console.log('Running migrations...');
   const dbmaanager = PGLiteManager.getInstance();

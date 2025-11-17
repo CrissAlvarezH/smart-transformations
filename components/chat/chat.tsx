@@ -9,12 +9,14 @@ import { useOnToolCall } from '@/hooks/tools';
 import { useDatasetContext } from '@/hooks/datasets';
 import { ChatInput } from './chat-input';
 import { Conversation } from './conversation';
+import { useState } from 'react';
 
 
 export function Chat({ datasetId, initialMessages }: { datasetId: number, initialMessages: UIMessage[] }) {
   const { mutateAsync: saveMessage } = useSaveMessage(datasetId);
   const { getDatasetContext } = useDatasetContext(datasetId);
   const { onToolCall } = useOnToolCall(datasetId);
+  const [ input, setInput ] = useState('');
 
   const { messages, sendMessage, status, addToolResult } = useChat({
     id: datasetId.toString(),
@@ -73,14 +75,14 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
     <div className="flex h-full flex-col bg-black text-white" style={{ overscrollBehavior: 'contain' }}>
       <div className="flex-1 flex flex-col min-h-0">
         {messages.length === 0 ? (
-          <EmptyState onSelectPrompt={(prompt) => { /* TODO */}} />
+          <EmptyState onSelectPrompt={setInput} />
         ) : (
           <Conversation messages={messages}>
             {messages.map((msg: UIMessage, index: number) => (
-              <ChatMessage 
-                key={msg.id} 
-                message={msg} 
-                isChatReady={status === "ready"} 
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                isChatReady={status === "ready"}
               />
             ))}
           </Conversation>
@@ -88,9 +90,11 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
       </div>
 
       <div className="flex-shrink-0 p-6 border-t border-zinc-800">
-        <ChatInput 
-          onSubmit={handleSubmit} 
-          isReady={status === 'ready'} 
+        <ChatInput
+          onSubmit={handleSubmit}
+          isReady={status === 'ready'}
+          input={input}
+          setInput={setInput}
         />
       </div>
     </div>

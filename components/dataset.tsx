@@ -13,6 +13,7 @@ import { DatasetTable } from "@/lib/pglite";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
+import { ChartsDashboard } from "./charts-dashboard/charts-dashboard";
 
 export interface DatasetProps {
   dataset: DatasetTable;
@@ -57,10 +58,8 @@ export function Dataset({ dataset }: DatasetProps) {
             )}
           </TabsContent>
 
-          <TabsContent value="charts" className="flex-1 overflow-auto">
-            <div className="h-full flex items-center justify-center">
-              {/* Charts will be added here later */}
-            </div>
+          <TabsContent value="charts" className="flex-1 overflow-auto bg-zinc-100">
+            <ChartsDashboard datasetId={dataset.id} />
           </TabsContent>
         </Tabs>
       )}

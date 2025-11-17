@@ -3,15 +3,12 @@
 import { UIMessage } from "@ai-sdk/react";
 import { Markdown } from "../markdown";
 
-import { ChevronDown, Bolt, Wrench, Loader2 } from "lucide-react";
-import { useState, useEffect, useMemo, memo } from "react";
+import { ChevronDown, Bolt, Loader2, PlusIcon } from "lucide-react";
+import { useState, useMemo, memo } from "react";
 import { cn } from "@/lib/utils";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { useChartData } from "@/hooks/chart";
-import { Skeleton } from "../ui/skeleton";
+import { LinesChart } from "../charts-dashboard/line-chart";
+import { useSaveChart } from "@/hooks/chart";
 
-// Move colors outside component to prevent recreation on every render
-const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff6384', '#36a2eb'];
 
 interface ChatMessageProps {
   isChatReady: boolean
@@ -53,7 +50,10 @@ export function ChatMessage({ message, isChatReady }: ChatMessageProps) {
               return <GenericToolPart key={index} part={part} isLoading={isLoading} />;
             }
             case 'tool-generate_lines_chart': {
-              return <LinesChartTool key={index} part={part} isLoading={isLoading} />;
+              return (isLoading
+                ? <GenericToolPart key={index} part={part} isLoading />
+                : <LinesChartTool key={index} part={part} />
+              );
             }
             default:
               return null;
@@ -121,13 +121,33 @@ function GenericToolPart({ part, isLoading }: { part: any, isLoading: boolean })
   )
 }
 
+function ChartToolWrapper({
+  children, title, chartId
+}: {
+  children: React.ReactNode, title: string, chartId: number
+}) {
+  const { saveChart } = useSaveChart();
 
-function LinesChartTool({ part, isLoading }: { part: any, isLoading: boolean }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 w-full">
+        <p className="text-sm text-zinc-400 p-2">{title}</p>
+        <div>
+          <button 
+          onClick={() => saveChart(chartId)}
+          className="rounded-full p-1.5 cursor-pointer hover:bg-zinc-800" title="Add chart to 'Charts' panel">
+            <PlusIcon className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {children}
+    </div>
+  )
+}
+
+function LinesChartTool({ part }: { part: any }) {
   const { state, input, output } = part;
-
-  if (isLoading) {
-    return <GenericToolPart part={part} isLoading />;
-  }
 
   if (state !== 'output-available') {
     return <div>Warning: not loaded yet</div>;
@@ -144,51 +164,13 @@ function LinesChartTool({ part, isLoading }: { part: any, isLoading: boolean }) 
     linesNames: input.linesNames
   }), [output.chart.tableName, input.xAxisName, JSON.stringify(input.linesNames)]);
 
-  return <LinesChart
-    chartTableName={chartProps.chartTableName}
-    xAxisName={chartProps.xAxisName}
-    linesNames={chartProps.linesNames}
-  />;
-}
-
-
-const LinesChart = memo(function LinesChart({
-  chartTableName, xAxisName, linesNames
-}: {
-  chartTableName: string,
-  xAxisName: string,
-  linesNames: string[]
-}) {
-  const { data, isLoading: isLoadingChart, isError, error } = useChartData(chartTableName);
-
-  if (isLoadingChart) {
-    return (
-      <div className="w-full h-52 flex items-center justify-center gap-2 border border-zinc-700 rounded-md animate-pulse">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="text-zinc-400 text-xs">Loading chart...</span>
-      </div>
-    )
-  } else if (isError) {
-    return <div>Error: {error?.message ?? 'Unknown error'}</div>;
-  }
-
   return (
-    <div className="w-full overflow-auto">
-      <LineChart
-        style={{ width: '100%', maxWidth: '700px', height: '100%', maxHeight: '70vh', aspectRatio: 1.618 }}
-        responsive
-        data={data}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xAxisName} />
-        <YAxis width="auto" />
-        <Tooltip />
-        <Legend />
-
-        {linesNames.map((lineName: string, index: number) => (
-          <Line key={lineName} type="monotone" dataKey={lineName} stroke={CHART_COLORS[index % CHART_COLORS.length]} activeDot={{ r: 8 }} />
-        ))}
-      </LineChart>
-    </div>
-  )
-});
+    <ChartToolWrapper title={input.title} chartId={output.chart.id}>
+      <LinesChart
+        chartTableName={chartProps.chartTableName}
+        xAxisName={chartProps.xAxisName}
+        linesNames={chartProps.linesNames}
+      />
+    </ChartToolWrapper>
+  );
+}

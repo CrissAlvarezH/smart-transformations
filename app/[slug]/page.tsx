@@ -25,7 +25,7 @@ export default function DatasetPage() {
   if (!dataset) return <DatasetNotFound />
 
   return (
-    <WorkspaceProvider>
+    <WorkspaceProvider datasetId={dataset.id}>
       <Workspace dataset={dataset} />
     </WorkspaceProvider>
   )

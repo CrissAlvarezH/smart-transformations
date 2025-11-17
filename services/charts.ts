@@ -57,3 +57,21 @@ export async function createChart(
     throw error;
   }
 }
+
+
+export async function saveChart(db: PGLiteManager, datasetId: number, chartId: number) {
+  await db.query(`
+    UPDATE dataset_charts
+    SET is_saved = TRUE
+    WHERE id = $1 AND dataset_id = $2
+  `, [chartId, datasetId]);
+
+  return { success: true };
+}
+
+export async function getSavedCharts(db: PGLiteManager, datasetId: number) {
+  const result = await db.query(`
+    SELECT * FROM dataset_charts WHERE dataset_id = $1 AND is_saved = TRUE
+  `, [datasetId]);
+  return result.rows;
+}
