@@ -101,3 +101,26 @@ export const generateTransformationSql = (datasetContext: RequestDatasetContext)
       return { sql: result.object.sql };
     },
 })
+
+
+export const generateLinesChart = (datasetContext: RequestDatasetContext) => tool({
+    description: [
+      'Generate a line chart to visualize the dataset data using Recharts React library.',
+      'You will be given a SQL query that returns the data to visualize with the correct column names.',
+      'The chart will be a lines chart, it has an X axis and a Y axis and diferent lines representing the data, the Y axis is automatically generated based on the data values.',
+    ].join('\n'),
+    inputSchema: z.object({
+      title: z.string().describe('The title of the chart, create a title that is descriptive and concise with up to 13 words maximum'),
+      sql: z.string().describe('The SQL query that returns the data to visualize with the correct column names.'),
+      xAxisName: z.string().describe('The name of the X axis, it must be a column name from the SQL query.'),
+      linesNames: z.array(z.string()).describe('The names of the lines to visualize, it must be a column name from the SQL query.'),
+    }),
+    outputSchema: z.object({
+      success: z.boolean().describe('Whether the chart was generated successfully.'),
+      chart: z.object({
+        id: z.number().describe('The ID of the chart that was generated.'),
+        tableName: z.string().describe('The name of the table that contains the data to visualize.'),
+      }),
+      error: z.string().optional().describe('The error message if the chart was not generated successfully.'),
+    }),
+})

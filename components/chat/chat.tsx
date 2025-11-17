@@ -2,7 +2,6 @@
 
 import { useChat, UIMessage } from '@ai-sdk/react';
 import { generateId, lastAssistantMessageIsCompleteWithToolCalls, DefaultChatTransport } from 'ai';
-import { useRef, useEffect, useState } from 'react';
 import { EmptyState } from './empty-state';
 import { ChatMessage } from './chat-message';
 import { useSaveMessage } from '@/hooks/messages';
@@ -14,7 +13,6 @@ import { Conversation } from './conversation';
 
 export function Chat({ datasetId, initialMessages }: { datasetId: number, initialMessages: UIMessage[] }) {
   const { mutateAsync: saveMessage } = useSaveMessage(datasetId);
-  const [input, setInput] = useState('');
   const { getDatasetContext } = useDatasetContext(datasetId);
   const { onToolCall } = useOnToolCall(datasetId);
 
@@ -75,7 +73,7 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
     <div className="flex h-full flex-col bg-black text-white" style={{ overscrollBehavior: 'contain' }}>
       <div className="flex-1 flex flex-col min-h-0">
         {messages.length === 0 ? (
-          <EmptyState onSelectPrompt={setInput} />
+          <EmptyState onSelectPrompt={(prompt) => { /* TODO */}} />
         ) : (
           <Conversation messages={messages}>
             {messages.map((msg: UIMessage, index: number) => (
@@ -93,8 +91,6 @@ export function Chat({ datasetId, initialMessages }: { datasetId: number, initia
         <ChatInput 
           onSubmit={handleSubmit} 
           isReady={status === 'ready'} 
-          input={input} 
-          setInput={setInput} 
         />
       </div>
     </div>

@@ -6,6 +6,9 @@ import { Markdown } from "../markdown";
 import { ChevronDown, Bolt, Wrench, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useExecuteQuery } from "@/hooks/datasets";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useChartData } from "@/hooks/chart";
 
 
 interface ChatMessageProps {
@@ -35,16 +38,20 @@ export function ChatMessage({ message, isChatReady }: ChatMessageProps) {
           // It is a tool part
 
           const isTheLastPart = index === message.parts.length - 1;
+          const isLoading = isTheLastPart && !isChatReady;
 
           switch (part.type) {
             case 'tool-query_data': {
-              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
+              return <GenericToolPart key={index} part={part} isLoading={isLoading} />;
             }
             case 'tool-generate_transformation_sql': {
-              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
+              return <GenericToolPart key={index} part={part} isLoading={isLoading} />;
             }
             case 'tool-create_transformation': {
-              return <GenericToolPart key={index} part={part} isLoading={isTheLastPart && !isChatReady} />;
+              return <GenericToolPart key={index} part={part} isLoading={isLoading} />;
+            }
+            case 'tool-generate_lines_chart': {
+              return <LinesChartTool key={index} part={part} isLoading={isLoading} />;
             }
             default:
               return null;
@@ -54,6 +61,7 @@ export function ChatMessage({ message, isChatReady }: ChatMessageProps) {
     </div>
   )
 }
+
 
 function GenericToolPart({ part, isLoading }: { part: any, isLoading: boolean }) {
   const { state, input, output } = part;
@@ -73,6 +81,7 @@ function GenericToolPart({ part, isLoading }: { part: any, isLoading: boolean })
     'query_data': 'Querying dataset data',
     'generate_transformation_sql': 'Generating tranformation',
     'create_transformation': 'Applying transformation',
+    'generate_lines_chart': 'Generating lines chart',
   }
   const toolNameTranslated = toolNameTranslator[toolName];
 
@@ -107,5 +116,67 @@ function GenericToolPart({ part, isLoading }: { part: any, isLoading: boolean })
         </pre>
       </div>
     </div>
+  )
+}
+
+
+function LinesChartTool({ part, isLoading }: { part: any, isLoading: boolean }) {
+  const { state, input, output } = part;
+
+  if (isLoading) {
+    return <GenericToolPart part={part} isLoading />;
+  }
+
+  if (state !== 'output-available') {
+    return <div>Warning: not loaded yet</div>;
+  }
+
+  if (input.sql === undefined || input.xAxisName === undefined || input.linesNames === undefined) {
+    return <div>Error: missing input</div>;
+  }
+
+  return <LinesChart 
+    chartTableName={output.chart.tableName} 
+    xAxisName={input.xAxisName} 
+    linesNames={input.linesNames} 
+  />;
+}
+
+
+function LinesChart({ 
+  chartTableName, xAxisName, linesNames 
+}: { 
+  chartTableName: string, 
+  xAxisName: string, 
+  linesNames: string[] 
+}) {
+  const { data, isLoading: isLoadingChart, isError, error } = useChartData(chartTableName);
+  if (isLoadingChart) {
+    return <div>Loading...</div>;
+  } else if (isError) {
+    return <div>Error: {error?.message ?? 'Unknown error'}</div>;
+  }
+
+  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff6384', '#36a2eb'];
+
+  return (
+    <div className="w-full overflow-auto">
+      <LineChart
+        style={{ width: '100%', maxWidth: '700px', height: '100%', maxHeight: '70vh', aspectRatio: 1.618 }}
+        responsive
+        data={data}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey={xAxisName} />
+        <YAxis width="auto" />
+        <Tooltip />
+        <Legend />
+
+        {linesNames.map((lineName: string, index: number) => (
+          <Line key={lineName} type="monotone" dataKey={lineName} stroke={colors[index % colors.length]} activeDot={{ r: 8 }} />
+        ))}
+      </LineChart>
+    </div>
+
   )
 }

@@ -8,7 +8,7 @@ import {
   renameDataset
 } from "@/services/datasets";
 import { CSVFile } from "@/components/csv-uploader";
-import { createBlankDataset, deleteDataset, insertCSVFileIntoDatabase } from "@/services/datasets";
+import { createBlankDataset, deleteDataset, queryDB, insertCSVFileIntoDatabase } from "@/services/datasets";
 import { useState } from "react";
 import { DatasetTable } from "@/lib/pglite";
 import { DATASET_BY_SLUG, DATASET_DATA, DATASET_VERSIONS, DATASETS, MESSAGES } from "./query-keys";

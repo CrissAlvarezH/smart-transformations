@@ -1,9 +1,10 @@
 import { useApp } from "@/app/providers";
 import { ToolCall } from "@ai-sdk/provider-utils";
-import { getDatasetDataPaginated, queryDatasetData } from "@/services/datasets";
+import { getDatasetDataPaginated, queryDB } from "@/services/datasets";
 import { createDatasetVersion } from "@/services/versions";
 import { useQueryClient } from "@tanstack/react-query";
-import { DATASET_DATA, DATASET_VERSIONS, DATASETS } from "./query-keys";
+import { CHART_DATA, DATASET_DATA, DATASET_VERSIONS, DATASETS } from "./query-keys";
+import { createChart } from "@/services/charts";
 
 
 export const useOnToolCall = (datasetId: number) => {
@@ -42,7 +43,7 @@ export const useOnToolCall = (datasetId: number) => {
 
       case 'query_data':
         try {
-          const result = await queryDatasetData(db, toolCall.input.sql);
+          const result = await queryDB(db, toolCall.input.sql, 100);
 
           // the output must be array of arrays of strings, exampel [[1, 2, 3], [4, 5, 6]]
           return {
@@ -56,6 +57,34 @@ export const useOnToolCall = (datasetId: number) => {
             success: false,
             error: error instanceof Error ? error.message : 'Failed to query dataset data',
           };
+        }
+
+      case 'generate_lines_chart':
+        // - validate the query executing it and putting the result in a new table 
+        // - if the query is valid, insert the query into the dataset_charts table with 'saved' in false
+        // - set the react-query cache for the query of the chart table to be used in the Chart component later
+        try {
+          const { id, tableName } = await createChart(
+            db, datasetId, toolCall.input.title, toolCall.input.sql, 'lines', toolCall.input
+          );
+
+          const result = await queryDB(db, `SELECT * FROM ${tableName}`, -1);
+
+          queryClient.setQueryData([CHART_DATA, tableName], result);
+
+          return {
+            success: true,
+            chart: {
+              id: id,
+              tableName: tableName,
+            },
+          };
+        } catch (error) {
+          console.error('Error executing query to generate chart', error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed executing query to generate chart',
+          }
         }
     }
   };

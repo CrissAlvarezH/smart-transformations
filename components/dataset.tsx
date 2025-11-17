@@ -3,7 +3,7 @@ import { useDatasetVersions, useResetDatasetToVersion } from "@/hooks/versions";
 import { useEffect, useState } from "react";
 import CSVTable from "@/components/csv-table";
 import { CSVIcon } from "@/components/Icons";
-import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, Edit, FileText, Loader2, RotateCcw, Save, X } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, Edit, FileText, Loader2, RotateCcw, Save, X, Table, BarChart } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { useWorkspace } from "@/app/[slug]/providers";
@@ -12,6 +12,7 @@ import { Input } from "./ui/input";
 import { DatasetTable } from "@/lib/pglite";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 
 export interface DatasetProps {
   dataset: DatasetTable;
@@ -35,7 +36,7 @@ export function Dataset({ dataset }: DatasetProps) {
   return (
     <div className="flex-1 h-full flex flex-col overflow-auto bg-white">
       {data && (
-        <>
+        <Tabs defaultValue="data" className="flex-1 flex flex-col overflow-hidden gap-0">
           <TableToolbar
             dataset={dataset}
             total={data.total}
@@ -44,8 +45,7 @@ export function Dataset({ dataset }: DatasetProps) {
             isLoading={isPending || isFetching || isLoading}
           />
 
-          <div className="flex-1 overflow-auto">
-
+          <TabsContent value="data" className="flex-1 overflow-auto">
             {isBlank ? (
               <div className="pt-24 text-center flex flex-col gap-2 items-center justify-center">
                 <FileText className="w-12 h-12 text-gray-300 mb-2" />
@@ -55,8 +55,14 @@ export function Dataset({ dataset }: DatasetProps) {
             ) : (
               <CSVTable csvData={convertToCSVData(data.data)} />
             )}
-          </div>
-        </>
+          </TabsContent>
+
+          <TabsContent value="charts" className="flex-1 overflow-auto">
+            <div className="h-full flex items-center justify-center">
+              {/* Charts will be added here later */}
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   )
@@ -90,6 +96,19 @@ function TableToolbar({
           <VersionSelector datasetId={dataset.id} />
         </div>
 
+      </div>
+
+      <div className="flex items-center">
+        <TabsList>
+          <TabsTrigger value="data">
+            <Table className="h-4 w-4" />
+            <span>Data</span>
+          </TabsTrigger>
+          <TabsTrigger value="charts">
+            <BarChart className="h-4 w-4" />
+            <span>Charts</span>
+          </TabsTrigger>
+        </TabsList>
       </div>
 
       <div className="px-2 flex items-center gap-3">

@@ -3,13 +3,12 @@ import { Loader2, ArrowUpIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export function ChatInput({
-  onSubmit, isReady, input, setInput
+  onSubmit, isReady
 }: {
   onSubmit: (input: string) => void;
-  input: string;
-  setInput: (input: string) => void;
   isReady: boolean;
 }) {
+  const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const autoResize = () => {

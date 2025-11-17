@@ -259,16 +259,24 @@ export async function deleteDataset(db: PGLiteManager, datasetId: number) {
 }
 
 
-export async function queryDatasetData(
+const NO_QUERY_LIMIT = -1;
+
+export async function queryDB(
   db: PGLiteManager,
-  sql: string
+  sql: string,
+  limit: number = NO_QUERY_LIMIT, 
 ): Promise<any[]> {
+  let limitClause = '';
+  if (limit !== NO_QUERY_LIMIT) {
+    limitClause = `LIMIT ${limit}`;
+  }
+
   const result = await db.query(`
     WITH original_query AS (
       ${sql}
     )
     SELECT * FROM original_query
-    LIMIT 100
+    ${limitClause}
   `);
   return result.rows;
 }

@@ -221,6 +221,22 @@ export async function runMigrations() {
     )
   `);
 
+  // create dataset_charts table
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS dataset_charts (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      sql TEXT NOT NULL,
+      chart_type TEXT NOT NULL, -- (lines, bars, etc.)
+      chart_arguments JSONB NOT NULL, -- arguments for the chart depending on the type of chart
+      is_saved BOOLEAN NOT NULL DEFAULT FALSE,
+      table_name TEXT NOT NULL, -- table where the query result is stored (the chart data)
+      table_columns JSONB NOT NULL,
+      dataset_id INTEGER NOT NULL REFERENCES datasets(id) ON DELETE CASCADE,
+      created_at TIMESTAMP NOT NULL
+    )
+  `);
+
   // create messages table
   await db.query(`
     CREATE TABLE IF NOT EXISTS messages (
