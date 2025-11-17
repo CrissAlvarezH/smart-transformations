@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     - NEVER pass sql as instructions to the \`generate_transformation_sql\` tool, always pass a clear and concise instruction in natural language.
     - After calling \`generate_transformation_sql\`, you must call the \`create_transformation\` tool and pass it the generated SQL query in the previeous step.
     - Sometimes the generated SQL query cand fail, when that happens try to identify the error and generate a new SQL query, if you don't have any idea how to fix the error, try to ask the user for clarification.
-    - Remember that operator double precision % integer does not exist in pglite.
+    - Remember not to use the % operator, it does not exist in pglite.
     - DO NOT SHOW THE SQL QUERY TO THE USER.
   `;
 

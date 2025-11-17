@@ -17,7 +17,6 @@ export function Conversation({
 }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const lastMessageIdRef = useRef<string | null>(null);
 
@@ -25,81 +24,37 @@ export function Conversation({
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer) return;
 
-    const isNearBottom = () => {
-      if (!scrollContainer) return true;
+    const handleScroll = () => {
+      // Update shouldAutoScroll based on whether user is near bottom
       const threshold = 100; // pixels from bottom
       const distanceFromBottom = 
         scrollContainer.scrollHeight - 
         scrollContainer.scrollTop - 
         scrollContainer.clientHeight;
-      return distanceFromBottom < threshold;
+      shouldAutoScrollRef.current = distanceFromBottom < threshold;
     };
 
-    const handleScroll = () => {
-      // Update shouldAutoScroll based on whether user is near bottom
-      shouldAutoScrollRef.current = isNearBottom();
-    };
-
-    const scrollToBottom = (force = false) => {
-      if (scrollContainer) {
-        if (force || shouldAutoScrollRef.current) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-          // If forced, also update shouldAutoScrollRef to true
-          if (force) {
-            shouldAutoScrollRef.current = true;
-          }
-        }
-      }
-    };
-
-    // Add scroll event listener
+    // Add scroll event listener to track user scroll position
     scrollContainer.addEventListener('scroll', handleScroll);
 
-    // Create a MutationObserver to watch for changes in the content
-    const observer = new MutationObserver((mutations) => {
-      // Only trigger scrolling if there are actual content changes (not attribute changes)
-      const hasContentChanges = mutations.some(mutation => 
-        mutation.type === 'childList' && mutation.addedNodes.length > 0
-      );
-      
-      if (hasContentChanges) {
-        // Small delay to ensure DOM is updated
-        setTimeout(scrollToBottom, 50);
-      }
-    });
-
-    // Start observing the content container
-    if (contentRef.current) {
-      observer.observe(contentRef.current, {
-        childList: true,
-        subtree: true,
-        // Removed characterData: true to prevent excessive triggering
-        // characterData: true
-      });
-    }
-
-    // Initial scroll
-    setTimeout(() => scrollToBottom(false), 50);
-
-    // Cleanup observer and event listener on unmount
+    // Cleanup event listener on unmount
     return () => {
-      observer.disconnect();
       scrollContainer.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
-  // Detect when user sends a new message and force scroll to bottom
+  // Handle all scroll management based on messages
   useEffect(() => {
     if (!messages || messages.length === 0) return;
 
     const lastMessage = messages[messages.length - 1];
     const lastMessageId = lastMessage?.id;
 
-    // Check if this is a new message and if it's from the user
+    // Check if this is a new message or message update
     if (lastMessageId && lastMessageId !== lastMessageIdRef.current) {
       lastMessageIdRef.current = lastMessageId;
       
-      // If the last message is from the user, force scroll to bottom
+      // For new user messages, always force scroll to bottom
       if (lastMessage.role === 'user') {
         setTimeout(() => {
           const scrollContainer = scrollContainerRef.current;
@@ -109,6 +64,24 @@ export function Conversation({
           }
         }, 50);
       }
+      // For assistant messages, only scroll if user is near bottom
+      else if (lastMessage.role === 'assistant') {
+        setTimeout(() => {
+          const scrollContainer = scrollContainerRef.current;
+          if (scrollContainer && shouldAutoScrollRef.current) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+          }
+        }, 50);
+      }
+    }
+    // Handle message content updates (like streaming)
+    else if (lastMessage && lastMessage.role === 'assistant') {
+      setTimeout(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (scrollContainer && shouldAutoScrollRef.current) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }, 50);
     }
   }, [messages]);
 
@@ -120,7 +93,7 @@ export function Conversation({
         scrollBehavior: 'smooth',
         overscrollBehavior: 'contain'
       }}>
-      <div ref={contentRef} className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto space-y-4">
         {children}
         <div ref={messagesEndRef} className="h-4" />
       </div>
