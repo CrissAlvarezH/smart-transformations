@@ -29,9 +29,9 @@ export const LinesChart = memo(function LinesChart({
   }
 
   return (
-    <div className="w-full overflow-auto">
+    <div className="w-full">
       <LineChart
-        style={{ width: '100%', maxWidth: '700px', height: '100%', maxHeight: '70vh', aspectRatio: 1.618 }}
+        style={{ width: '100%', height: '100%', aspectRatio: 1.618 }}
         responsive
         data={data}
       >

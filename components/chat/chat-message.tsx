@@ -133,9 +133,9 @@ function ChartToolWrapper({
       <div className="flex items-center justify-between gap-2 w-full">
         <p className="text-sm text-zinc-400 p-2">{title}</p>
         <div>
-          <button 
-          onClick={() => saveChart(chartId)}
-          className="rounded-full p-1.5 cursor-pointer hover:bg-zinc-800" title="Add chart to 'Charts' panel">
+          <button
+            onClick={() => saveChart(chartId)}
+            className="rounded-full p-1.5 cursor-pointer hover:bg-zinc-800" title="Add chart to 'Charts' panel">
             <PlusIcon className="w-4 h-4" />
           </button>
         </div>
@@ -166,11 +166,13 @@ function LinesChartTool({ part }: { part: any }) {
 
   return (
     <ChartToolWrapper title={input.title} chartId={output.chart.id}>
-      <LinesChart
-        chartTableName={chartProps.chartTableName}
-        xAxisName={chartProps.xAxisName}
-        linesNames={chartProps.linesNames}
-      />
+      <div className="overflow-hidden">
+        <LinesChart
+          chartTableName={chartProps.chartTableName}
+          xAxisName={chartProps.xAxisName}
+          linesNames={chartProps.linesNames}
+        />
+      </div>
     </ChartToolWrapper>
   );
 }

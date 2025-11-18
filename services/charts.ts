@@ -11,6 +11,14 @@ export async function createChartTable(
     ${sql}
   `);
 
+  // reset the ___index___ column
+  await db.query(`
+    ALTER TABLE ${tableName} DROP COLUMN IF EXISTS ___index___
+  `);
+  await db.query(`
+    ALTER TABLE ${tableName} ADD COLUMN ___index___ SERIAL PRIMARY KEY
+  `);
+
   const columns = await db.query(`
     SELECT column_name 
     FROM information_schema.columns 
@@ -74,4 +82,43 @@ export async function getSavedCharts(db: PGLiteManager, datasetId: number) {
     SELECT * FROM dataset_charts WHERE dataset_id = $1 AND is_saved = TRUE
   `, [datasetId]);
   return result.rows;
+}
+
+
+export async function getChartTableDataPaginated(db: PGLiteManager, id: number, page: number = 1, pageSize: number = 50) {
+  const chart = await db.query(`
+    SELECT * FROM dataset_charts WHERE id = $1
+  `, [id]);
+
+  let columns = chart.rows[0].table_columns;
+  const tableName = chart.rows[0].table_name;
+
+  // set __index___ column at the first position
+  columns = ['___index___', ...columns.filter((c: string) => c !== '___index___')];
+
+  const data = await db.query(`
+    SELECT ${columns.join(', ')} FROM ${tableName}
+    ORDER BY ___index___ ASC
+    LIMIT ${pageSize}
+    OFFSET ${(page - 1) * pageSize}
+  `);
+
+  const total = await db.query(`
+    SELECT COUNT(*) FROM ${tableName}
+  `);
+  const totalRows = total.rows[0].count;
+  const totalPages = Math.ceil(totalRows / pageSize);
+
+  return { data, total: totalPages };
+}
+
+
+export async function deleteChart(db: PGLiteManager, chartId: number) {
+  await db.query(`
+    UPDATE dataset_charts
+    SET is_saved = FALSE
+    WHERE id = $1
+  `, [chartId]);
+
+  return { success: true };
 }
