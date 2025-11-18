@@ -51,7 +51,7 @@ export const useSaveChart = () => {
 export const useChartTableDataPaginated = (id: number, page: number, pageSize: number) => {
   const { db } = useApp();
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: [CHART_TABLE_DATA, id],
+    queryKey: [CHART_TABLE_DATA, id, page],
     queryFn: async () => await getChartTableDataPaginated(db, id, page, pageSize),
   });
   return { data: data as { data: any, total: number }, isLoading, isError, error };

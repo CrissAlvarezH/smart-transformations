@@ -80,7 +80,7 @@ export function Chat({ initialMessages }: { initialMessages: UIMessage[] }) {
           <EmptyState onSelectPrompt={setInput} />
         ) : (
           <Conversation messages={messages}>
-            {messages.map((msg: UIMessage, index: number) => (
+            {messages.map((msg: UIMessage) => (
               <ChatMessage
                 key={msg.id}
                 message={msg}

@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { ChartsDashboard } from "./charts-dashboard/charts-dashboard";
 import { DatasetPagination } from "./dataset-pagination";
 import { ActiveTab } from "@/app/[slug]/providers";
+import { motion } from "framer-motion";
 
 
 export function Dataset() {
@@ -51,13 +52,20 @@ export function Dataset() {
 
           <TabsContent value="spreadsheet" className="flex-1 overflow-auto">
             {isBlank ? (
-              <div className="pt-24 text-center flex flex-col gap-2 items-center justify-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+                className="pt-24 text-center flex flex-col gap-2 items-center justify-center"
+              >
                 <FileText className="w-12 h-12 text-gray-300 mb-2" />
                 <p className="text-xl font-bold text-gray-800">This dataset is empty</p>
                 <p className="text-gray-400 px-10">You can tell the AI to fill it up for you with the data you want</p>
-              </div>
+              </motion.div>
             ) : (
-              <CSVTable csvData={convertToCSVData(data.data)} />
+              <motion.div 
+                initial={{ opacity: 0}} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+              >
+                <CSVTable csvData={convertToCSVData(data.data)} />
+              </motion.div>
             )}
           </TabsContent>
 

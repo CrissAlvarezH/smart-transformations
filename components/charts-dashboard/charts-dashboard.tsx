@@ -11,6 +11,7 @@ import CSVTable from "../csv-table";
 import { useState } from "react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DatasetPagination } from "../dataset-pagination";
+import { motion } from "framer-motion";
 
 
 export function ChartsDashboard({ datasetId }: { datasetId: number }) {
@@ -26,16 +27,20 @@ export function ChartsDashboard({ datasetId }: { datasetId: number }) {
 
   if (savedCharts?.length === 0) {
     return (
-      <div className="flex justify-center pt-24">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+        className="flex justify-center pt-24">
         <EmptyState />
-      </div>
+      </motion.div>
     )
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2">
       {savedCharts?.map((chart: ChartTable) => (
-        <div key={chart.id} className="shadow-sm rounded-md border border-zinc-200 bg-white">
+        <motion.div 
+          initial={{ opacity: 0}} animate={{ opacity: 1 }} transition={{ duration: 0.2, ease: "easeInOut" }}
+          key={chart.id} 
+          className="shadow-sm rounded-md border border-zinc-200 bg-white">
 
           <div className="flex items-center justify-between gap-2 pr-1 pl-3 pt-1">
             <span className="text-gray-500 text-sm pr-2 font-medium">#{chart.id}</span>
@@ -47,15 +52,18 @@ export function ChartsDashboard({ datasetId }: { datasetId: number }) {
           </div>
 
           {chart.chart_type === 'lines' && (
-            <div className="px-4 pb-2 overflow-hidden">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+              className="px-4 pb-2 overflow-hidden"
+            >
               <LinesChart
                 chartTableName={chart.table_name}
                 xAxisName={chart.chart_arguments.xAxisName}
                 linesNames={chart.chart_arguments.linesNames}
               />
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       ))}
     </div>
   )
