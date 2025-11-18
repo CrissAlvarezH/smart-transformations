@@ -6,3 +6,4 @@ export const DATASET_BY_SLUG = "dataset-by-slug";
 export const CHART_DATA = "chart-data";
 export const SAVED_CHARTS = "saved-charts";
 export const CHART_TABLE_DATA = "chart-table-data";
+export const CHART = "chart";

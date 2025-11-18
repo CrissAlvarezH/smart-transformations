@@ -1,4 +1,4 @@
-import PGLiteManager from "@/lib/pglite";
+import PGLiteManager, { ChartTable } from "@/lib/pglite";
 
 
 export async function createChartTable(
@@ -121,4 +121,17 @@ export async function deleteChart(db: PGLiteManager, chartId: number) {
   `, [chartId]);
 
   return { success: true };
+}
+
+
+export async function getChart(db: PGLiteManager, chartId: number) {
+  const result = await db.query(`
+    SELECT * FROM dataset_charts WHERE id = $1
+  `, [chartId]);
+
+  if (result.rows.length === 0) {
+    throw new Error(`Chart with id ${chartId} not found`);
+  }
+
+  return result.rows[0] as ChartTable;
 }

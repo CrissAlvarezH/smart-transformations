@@ -2,12 +2,12 @@
 
 import { UIMessage } from "@ai-sdk/react";
 import { Markdown } from "../markdown";
-
-import { ChevronDown, Bolt, Loader2, PlusIcon } from "lucide-react";
+import { ChevronDown, Bolt, Loader2, PlusIcon, CheckIcon } from "lucide-react";
 import { useState, useMemo, memo } from "react";
 import { cn } from "@/lib/utils";
 import { LinesChart } from "../charts-dashboard/line-chart";
-import { useSaveChart } from "@/hooks/chart";
+import { useGetChart, useSaveChart } from "@/hooks/chart";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 
 interface ChatMessageProps {
@@ -126,19 +126,35 @@ function ChartToolWrapper({
 }: {
   children: React.ReactNode, title: string, chartId: number
 }) {
-  const { saveChart } = useSaveChart();
+  const { saveChart, isPending: isPendingSaveChart } = useSaveChart();
+  const { data: chart, isLoading: isLoadingChart, isError: isErrorChart } = useGetChart(chartId);
 
   return (
     <div>
       <div className="flex items-center justify-between gap-2 w-full">
         <p className="text-sm text-zinc-400 p-2">{title}</p>
-        <div>
-          <button
-            onClick={() => saveChart(chartId)}
-            className="rounded-full p-1.5 cursor-pointer hover:bg-zinc-800" title="Add chart to 'Charts' panel">
-            <PlusIcon className="w-4 h-4" />
-          </button>
-        </div>
+
+        {isLoadingChart ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          chart && chart.is_saved ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <CheckIcon className="w-4 h-4 m-1" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Chart is saved</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={() => saveChart(chartId)}
+              disabled={isPendingSaveChart}
+              className="rounded-full p-1.5 cursor-pointer hover:bg-zinc-800" title="Add chart to 'Charts' panel">
+              {isPendingSaveChart ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
+            </button>
+          )
+        )}
       </div>
 
       {children}

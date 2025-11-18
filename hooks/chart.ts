@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CHART_DATA, CHART_TABLE_DATA, SAVED_CHARTS } from "./query-keys";
+import { CHART, CHART_DATA, CHART_TABLE_DATA, SAVED_CHARTS } from "./query-keys";
 import { useApp } from "@/app/providers";
 import { queryDB } from "@/services/datasets";
-import { deleteChart, getChartTableDataPaginated, getSavedCharts, saveChart } from "@/services/charts";
+import { deleteChart, getChart, getChartTableDataPaginated, getSavedCharts, saveChart } from "@/services/charts";
 import { useWorkspace } from "@/app/[slug]/providers";
 import { ChartTable } from "@/lib/pglite";
 
@@ -36,8 +36,9 @@ export const useSaveChart = () => {
     mutationFn: async (chartId: number) => {
       return await saveChart(db, datasetId, chartId);
     },
-    onSuccess: () => {
+    onSuccess: (_, chartId) => {
       queryClient.invalidateQueries({ queryKey: [SAVED_CHARTS, datasetId] });
+      queryClient.invalidateQueries({ queryKey: [CHART, chartId] });
     }
   });
   return { saveChart: mutateAsync, isPending, isError, error };
@@ -61,10 +62,20 @@ export const useDeleteChart = () => {
 
   const { mutateAsync, isPending, isError, error } = useMutation({
     mutationFn: async (chartId: number) => await deleteChart(db, chartId),
-    onSuccess: () => {
+    onSuccess: (_, chartId) => {
       queryClient.invalidateQueries({ queryKey: [SAVED_CHARTS, datasetId] });
+      queryClient.invalidateQueries({ queryKey: [CHART, chartId] });
     }
   });
 
   return { deleteChart: mutateAsync, isPending, isError, error };
+}
+
+export const useGetChart = (chartId: number) => {
+  const { db } = useApp();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: [CHART, chartId],
+    queryFn: async () => await getChart(db, chartId),
+  });
+  return { data: data as ChartTable, isLoading, isError, error };
 }
