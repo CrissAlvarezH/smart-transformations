@@ -17,11 +17,13 @@ export const useChartData = (tableName: string) => {
 }
 
 
-export const useGetSavedCharts = (datasetId: number) => {
+export const useGetSavedCharts = () => {
   const { db } = useApp();
+  const { dataset } = useWorkspace();
+
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: [SAVED_CHARTS, datasetId],
-    queryFn: async () => await getSavedCharts(db, datasetId),
+    queryKey: [SAVED_CHARTS, dataset.id],
+    queryFn: async () => await getSavedCharts(db, dataset.id),
   });
   return { data: data as ChartTable[], isLoading, isError, error };
 }
@@ -29,15 +31,16 @@ export const useGetSavedCharts = (datasetId: number) => {
 
 export const useSaveChart = () => {
   const { db } = useApp();
-  const { datasetId } = useWorkspace();
+  const { dataset, setActiveTab } = useWorkspace();
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending, isError, error } = useMutation({
     mutationFn: async (chartId: number) => {
-      return await saveChart(db, datasetId, chartId);
+      setActiveTab('charts');
+      await saveChart(db, dataset.id, chartId);
     },
     onSuccess: (_, chartId) => {
-      queryClient.invalidateQueries({ queryKey: [SAVED_CHARTS, datasetId] });
+      queryClient.invalidateQueries({ queryKey: [SAVED_CHARTS, dataset.id] });
       queryClient.invalidateQueries({ queryKey: [CHART, chartId] });
     }
   });
@@ -57,13 +60,13 @@ export const useChartTableDataPaginated = (id: number, page: number, pageSize: n
 
 export const useDeleteChart = () => {
   const { db } = useApp();
-  const { datasetId } = useWorkspace();
+  const { dataset } = useWorkspace();
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending, isError, error } = useMutation({
     mutationFn: async (chartId: number) => await deleteChart(db, chartId),
     onSuccess: (_, chartId) => {
-      queryClient.invalidateQueries({ queryKey: [SAVED_CHARTS, datasetId] });
+      queryClient.invalidateQueries({ queryKey: [SAVED_CHARTS, dataset.id] });
       queryClient.invalidateQueries({ queryKey: [CHART, chartId] });
     }
   });

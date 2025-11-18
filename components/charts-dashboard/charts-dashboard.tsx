@@ -14,7 +14,7 @@ import { DatasetPagination } from "../dataset-pagination";
 
 
 export function ChartsDashboard({ datasetId }: { datasetId: number }) {
-  const { data: savedCharts, isLoading: isLoadingSavedCharts, isError: isErrorSavedCharts } = useGetSavedCharts(datasetId);
+  const { data: savedCharts, isLoading: isLoadingSavedCharts, isError: isErrorSavedCharts } = useGetSavedCharts();
 
   if (isErrorSavedCharts) {
     return <div>Error loading saved charts: {isErrorSavedCharts}</div>;
@@ -70,7 +70,7 @@ function ChartDialogTrigger({ chart }: { chart: ChartTable }) {
   const { deleteChart, isPending, isError: isErrorDeleteChart, error: errorDeleteChart } = useDeleteChart();
 
   if (isLoading) {
-    return <div>Loading chart table data...</div>;
+    return <Loader2 className="w-4 h-4 animate-spin" />
   }
 
   if (isError) {

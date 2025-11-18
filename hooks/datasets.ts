@@ -12,6 +12,7 @@ import { createBlankDataset, deleteDataset, queryDB, insertCSVFileIntoDatabase }
 import { useState } from "react";
 import { DatasetTable } from "@/lib/pglite";
 import { DATASET_BY_SLUG, DATASET_DATA, DATASET_VERSIONS, DATASETS, MESSAGES } from "./query-keys";
+import { useWorkspace } from "@/app/[slug]/providers";
 
 
 export const useDatasetBySlug = (slug: string) => {
@@ -24,12 +25,13 @@ export const useDatasetBySlug = (slug: string) => {
 };
 
 
-export const useDatasetDataPaginated = (datasetId: number, page: number, version: string = 'latest') => {
+export const useDatasetDataPaginated = (page: number) => {
   const { db } = useApp();
+  const { dataset, selectedDatasetVersion } = useWorkspace();
 
   const { data, isLoading, isFetching, isPending, error } = useQuery({
-    queryKey: [DATASET_DATA, datasetId, page, version],
-    queryFn: async () => await getDatasetDataPaginated(db, datasetId, page, version),
+    queryKey: [DATASET_DATA, dataset.id, page, selectedDatasetVersion],
+    queryFn: async () => await getDatasetDataPaginated(db, dataset.id, page, selectedDatasetVersion),
     placeholderData: keepPreviousData,
   });
 
@@ -44,12 +46,13 @@ export interface DatasetContext {
   sample: string[][];
 }
 
-export const useDatasetContext = (datasetId: number) => {
+export const useDatasetContext = () => {
+  const { dataset } = useWorkspace();
   const { db } = useApp();
 
   const getDatasetContext = async (): Promise<DatasetContext> => {
     // get the dataset context for prompts, get dataset last version table name, columns and sample records
-    const data = await getDatasetDataPaginated(db, datasetId, 1, 'latest', 10);
+    const data = await getDatasetDataPaginated(db, dataset.id, 1, 'latest', 10);
 
     data.data.fields = data.data.fields.map((field: any) => ({
       name: field.name,

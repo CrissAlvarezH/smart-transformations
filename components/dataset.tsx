@@ -3,7 +3,7 @@ import { useDatasetVersions, useResetDatasetToVersion } from "@/hooks/versions";
 import { useEffect, useState } from "react";
 import CSVTable from "@/components/csv-table";
 import { CSVIcon } from "@/components/Icons";
-import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, Edit, FileText, Loader2, RotateCcw, Save, X, Table, BarChart } from "lucide-react";
+import { Edit, FileText, Loader2, RotateCcw, Table, BarChart } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { useWorkspace } from "@/app/[slug]/providers";
@@ -15,15 +15,13 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { ChartsDashboard } from "./charts-dashboard/charts-dashboard";
 import { DatasetPagination } from "./dataset-pagination";
+import { ActiveTab } from "@/app/[slug]/providers";
 
-export interface DatasetProps {
-  dataset: DatasetTable;
-}
 
-export function Dataset({ dataset }: DatasetProps) {
+export function Dataset() {
   const [page, setPage] = useState(1);
-  const { selectedDatasetVersion } = useWorkspace();
-  const { data, isLoading, isFetching, isPending, error } = useDatasetDataPaginated(dataset.id, page, selectedDatasetVersion);
+  const { data, isLoading, isFetching, isPending, error } = useDatasetDataPaginated(page);
+  const { activeTab, setActiveTab, dataset } = useWorkspace();
 
   if (error) return <div className="text-red-700">Error: {error.message}</div>;
 
@@ -38,7 +36,11 @@ export function Dataset({ dataset }: DatasetProps) {
   return (
     <div className="flex-1 h-full flex flex-col overflow-auto bg-white">
       {data && (
-        <Tabs defaultValue="data" className="flex-1 flex flex-col overflow-hidden gap-0">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as ActiveTab)}
+          className="flex-1 flex flex-col overflow-hidden gap-0"
+        >
           <TableToolbar
             dataset={dataset}
             total={data.total}
@@ -47,7 +49,7 @@ export function Dataset({ dataset }: DatasetProps) {
             isLoading={isPending || isFetching || isLoading}
           />
 
-          <TabsContent value="data" className="flex-1 overflow-auto">
+          <TabsContent value="spreadsheet" className="flex-1 overflow-auto">
             {isBlank ? (
               <div className="pt-24 text-center flex flex-col gap-2 items-center justify-center">
                 <FileText className="w-12 h-12 text-gray-300 mb-2" />
@@ -93,14 +95,14 @@ function TableToolbar({
         </div>
 
         <div className="flex items-center gap-2">
-          <VersionSelector datasetId={dataset.id} />
+          <VersionSelector />
         </div>
 
       </div>
 
       <div className="flex items-center">
         <TabsList>
-          <TabsTrigger value="data">
+          <TabsTrigger value="spreadsheet">
             <Table className="h-4 w-4" />
             <span>Data</span>
           </TabsTrigger>
@@ -119,12 +121,12 @@ function TableToolbar({
   )
 }
 
-function VersionSelector({ datasetId }: { datasetId: number }) {
+function VersionSelector() {
   const {
     data: versions,
     isLoading: isVersionsLoading,
     error: versionsError,
-  } = useDatasetVersions(datasetId);
+  } = useDatasetVersions();
   const { selectedDatasetVersion, selectDatasetVersion } = useWorkspace();
   const {
     mutateAsync: resetDatasetToVersion, isPending: isResettingPending, error: resetError
@@ -148,7 +150,7 @@ function VersionSelector({ datasetId }: { datasetId: number }) {
   }
 
   const handleResetDatasetToVersion = async (targetVersion: string) => {
-    await resetDatasetToVersion({ datasetId, targetVersion });
+    await resetDatasetToVersion({ targetVersion });
   }
 
   const isTheLatestVersion = selectedDatasetVersion === versions.rows[0].version.toString();

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UIMessage } from "ai";
 import { useApp } from "@/app/providers";
 import { MESSAGES } from "./query-keys";
+import { useWorkspace } from "@/app/[slug]/providers";
 
 
 function mapToUIMessage(message: any): UIMessage {
@@ -14,13 +15,14 @@ function mapToUIMessage(message: any): UIMessage {
   };
 }
 
-export const useMessages = (datasetId: number) => {
+export const useMessages = () => {
   const { db } = useApp();
+  const { dataset } = useWorkspace();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: [MESSAGES, datasetId],
+    queryKey: [MESSAGES, dataset.id],
     queryFn: async () => {
-      const messages = await getMessages(db, datasetId);
+      const messages = await getMessages(db, dataset.id);
       return messages.rows.map(mapToUIMessage);
     }
   });
@@ -28,14 +30,15 @@ export const useMessages = (datasetId: number) => {
   return { data, isLoading, isError };
 }
 
-export const useSaveMessage = (datasetId: number) => {
+export const useSaveMessage = () => {
   const { db } = useApp();
+  const { dataset } = useWorkspace();
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync } = useMutation({
-    mutationFn: async (message: UIMessage) => await saveMessage(db, datasetId, message),
+    mutationFn: async (message: UIMessage) => await saveMessage(db, dataset.id, message),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [MESSAGES, datasetId] });
+      queryClient.invalidateQueries({ queryKey: [MESSAGES, dataset.id] });
     }
   });
 

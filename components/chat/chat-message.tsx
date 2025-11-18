@@ -3,11 +3,12 @@
 import { UIMessage } from "@ai-sdk/react";
 import { Markdown } from "../markdown";
 import { ChevronDown, Bolt, Loader2, PlusIcon, CheckIcon } from "lucide-react";
-import { useState, useMemo, memo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { LinesChart } from "../charts-dashboard/line-chart";
-import { useGetChart, useSaveChart } from "@/hooks/chart";
+import { useGetChart, useGetSavedCharts, useSaveChart } from "@/hooks/chart";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { SAVED_CHARTS_LIMIT } from "@/app/[slug]/providers";
 
 
 interface ChatMessageProps {
@@ -128,6 +129,16 @@ function ChartToolWrapper({
 }) {
   const { saveChart, isPending: isPendingSaveChart } = useSaveChart();
   const { data: chart, isLoading: isLoadingChart, isError: isErrorChart } = useGetChart(chartId);
+  const { data: savedCharts, isLoading: isLoadingSavedCharts, isError: isErrorSavedCharts } = useGetSavedCharts();
+  const [canSaveMoreCharts, setCanSaveMoreCharts] = useState(true);
+
+  useEffect(() => {
+    if (isLoadingSavedCharts) return;
+    if (isErrorSavedCharts) return;
+    if (savedCharts && savedCharts.length >= SAVED_CHARTS_LIMIT) {
+      setCanSaveMoreCharts(false);
+    }
+  }, [savedCharts, isLoadingSavedCharts, isErrorSavedCharts]);
 
   return (
     <div>
@@ -147,12 +158,23 @@ function ChartToolWrapper({
               </TooltipContent>
             </Tooltip>
           ) : (
-            <button
-              onClick={() => saveChart(chartId)}
-              disabled={isPendingSaveChart}
-              className="rounded-full p-1.5 cursor-pointer hover:bg-zinc-800" title="Add chart to 'Charts' panel">
-              {isPendingSaveChart ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
-            </button>
+            canSaveMoreCharts ? (
+              <button
+                onClick={() => saveChart(chartId)}
+                disabled={isPendingSaveChart}
+                className="rounded-full p-1.5 cursor-pointer hover:bg-zinc-800" title="Add chart to 'Charts' panel">
+                {isPendingSaveChart ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
+              </button>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PlusIcon className="w-4 h-4 m-1 text-zinc-500" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>You have reached the maximum number of charts you can save. Delete a chart to save more.</p>
+                </TooltipContent>
+              </Tooltip>
+            )
           )
         )}
       </div>

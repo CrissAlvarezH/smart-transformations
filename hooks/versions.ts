@@ -2,15 +2,17 @@ import { useApp } from "@/app/providers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DATASET_VERSIONS, DATASETS } from "./query-keys";
 import { listDatasetVersions, resetDatasetToVersion } from "@/services/versions";
+import { useWorkspace } from "@/app/[slug]/providers";
 
 
-export const useDatasetVersions = (datasetId: number) => {
+export const useDatasetVersions = () => {
+  const { dataset } = useWorkspace();
   const { db } = useApp();
 
   const { data, isLoading, isFetching, isPending, error } = useQuery({
-    queryKey: [DATASET_VERSIONS, datasetId],
+    queryKey: [DATASET_VERSIONS, dataset.id],
     queryFn: async () => {
-      return await listDatasetVersions(db, datasetId);
+      return await listDatasetVersions(db, dataset.id);
     }
   });
 
@@ -20,15 +22,15 @@ export const useDatasetVersions = (datasetId: number) => {
 
 export const useResetDatasetToVersion = () => {
   const { db } = useApp();
+  const { dataset } = useWorkspace();
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: async ({ datasetId, targetVersion }: { datasetId: number, targetVersion: string }) => {
-      await resetDatasetToVersion(db, datasetId, targetVersion);
+    mutationFn: async ({ targetVersion }: { targetVersion: string }) => {
+      await resetDatasetToVersion(db, dataset.id, targetVersion);
     },
-    onSuccess: (_, vars) => {
-      const { datasetId } = vars;
-      queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, datasetId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, dataset.id] });
       queryClient.invalidateQueries({ queryKey: [DATASETS] });
     }
   });

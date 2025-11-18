@@ -1,4 +1,5 @@
 import PGLiteManager, { ChartTable } from "@/lib/pglite";
+import { SAVED_CHARTS_LIMIT } from "@/app/[slug]/providers";
 
 
 export async function createChartTable(
@@ -66,18 +67,33 @@ export async function createChart(
   }
 }
 
+export async function countSavedCharts(db: PGLiteManager, datasetId: number) {
+  const result = await db.query(`
+    SELECT COUNT(*) as count FROM dataset_charts WHERE dataset_id = $1 AND is_saved = TRUE 
+  `, [datasetId]);
+  return parseInt(result.rows[0].count);
+}
+
+export class SavedChartsLimitReachedError extends Error {
+  constructor() {
+    super('You have reached the maximum number of saved charts you can save');
+  }
+}
 
 export async function saveChart(db: PGLiteManager, datasetId: number, chartId: number) {
+  const count = await countSavedCharts(db, datasetId);
+  if (count >= SAVED_CHARTS_LIMIT) {
+    throw new SavedChartsLimitReachedError();
+  }
+
   await db.query(`
     UPDATE dataset_charts
     SET is_saved = TRUE
     WHERE id = $1 AND dataset_id = $2
   `, [chartId, datasetId]);
-
-  return { success: true };
 }
 
-export async function getSavedCharts(db: PGLiteManager, datasetId: number) {
+export async function getSavedCharts(db: PGLiteManager, datasetId: number): Promise<ChartTable[]> {
   const result = await db.query(`
     SELECT * FROM dataset_charts WHERE dataset_id = $1 AND is_saved = TRUE
   `, [datasetId]);

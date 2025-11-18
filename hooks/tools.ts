@@ -5,9 +5,11 @@ import { createDatasetVersion } from "@/services/versions";
 import { useQueryClient } from "@tanstack/react-query";
 import { CHART_DATA, DATASET_DATA, DATASET_VERSIONS, DATASETS } from "./query-keys";
 import { createChart } from "@/services/charts";
+import { useWorkspace } from "@/app/[slug]/providers";
 
 
-export const useOnToolCall = (datasetId: number) => {
+export const useOnToolCall = () => {
+  const { dataset } = useWorkspace();
   const { db } = useApp();
   const queryClient = useQueryClient();
 
@@ -16,7 +18,7 @@ export const useOnToolCall = (datasetId: number) => {
 
     switch (toolCall.toolName) {
       case 'get_dataset_sample':
-        const data = await getDatasetDataPaginated(db, datasetId, 1, 'latest', 10);
+        const data = await getDatasetDataPaginated(db, dataset.id, 1, 'latest', 10);
         // add the headers to the data
         const headers = data.data.fields.map((field: any) => field.name);
 
@@ -28,7 +30,7 @@ export const useOnToolCall = (datasetId: number) => {
 
       case 'create_transformation':
         try {
-          await createDatasetVersion(db, datasetId, toolCall.input.sql);
+          await createDatasetVersion(db, dataset.id, toolCall.input.sql);
         } catch (error) {
           console.error('Error creating transformation', error);
           return {
@@ -37,8 +39,8 @@ export const useOnToolCall = (datasetId: number) => {
           };
         }
         queryClient.invalidateQueries({ queryKey: [DATASETS] });
-        queryClient.invalidateQueries({ queryKey: [DATASET_DATA, datasetId] });
-        queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, datasetId] });
+        queryClient.invalidateQueries({ queryKey: [DATASET_DATA, dataset.id] });
+        queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, dataset.id] });
         return { success: true };
 
       case 'query_data':
@@ -65,7 +67,7 @@ export const useOnToolCall = (datasetId: number) => {
         // - set the react-query cache for the query of the chart table to be used in the Chart component later
         try {
           const { id, tableName } = await createChart(
-            db, datasetId, toolCall.input.title, toolCall.input.sql, 'lines', toolCall.input
+            db, dataset.id, toolCall.input.title, toolCall.input.sql, 'lines', toolCall.input
           );
 
           const result = await queryDB(db, `SELECT * FROM ${tableName}`, -1);

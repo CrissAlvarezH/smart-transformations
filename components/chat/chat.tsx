@@ -10,16 +10,18 @@ import { useDatasetContext } from '@/hooks/datasets';
 import { ChatInput } from './chat-input';
 import { Conversation } from './conversation';
 import { useState } from 'react';
+import { useWorkspace } from '@/app/[slug]/providers';
 
 
-export function Chat({ datasetId, initialMessages }: { datasetId: number, initialMessages: UIMessage[] }) {
-  const { mutateAsync: saveMessage } = useSaveMessage(datasetId);
-  const { getDatasetContext } = useDatasetContext(datasetId);
-  const { onToolCall } = useOnToolCall(datasetId);
+export function Chat({ initialMessages }: { initialMessages: UIMessage[] }) {
+  const { mutateAsync: saveMessage } = useSaveMessage();
+  const { dataset } = useWorkspace();
+  const { getDatasetContext } = useDatasetContext();
+  const { onToolCall } = useOnToolCall()
   const [ input, setInput ] = useState('');
 
   const { messages, sendMessage, status, addToolResult } = useChat({
-    id: datasetId.toString(),
+    id: dataset.id.toString(),
     transport: new DefaultChatTransport({
       api: '/api/chat',
       body: async () => {

@@ -3,15 +3,14 @@
 import { Chat } from "@/components/chat/chat";
 import { Dataset } from "@/components/dataset";
 import { useMessages } from "@/hooks/messages";
-import { DatasetTable } from "@/lib/pglite";
 import { UIMessage } from "@ai-sdk/react";
 import { HomeIcon, Loader2, MessageSquare, Database } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 
 
-export function Workspace({ dataset }: { dataset: DatasetTable }) {
-  const { data: storedMessages, isLoading: isLoadingMessages, isError: isErrorMessages } = useMessages(dataset.id);
+export function Workspace() {
+  const { data: storedMessages, isLoading: isLoadingMessages, isError: isErrorMessages } = useMessages();
 
   if (isErrorMessages) {
     return <div>Error loading messages: {isErrorMessages}</div>;
@@ -20,10 +19,10 @@ export function Workspace({ dataset }: { dataset: DatasetTable }) {
   return (
     <>
       <div className="hidden sm:block">
-        <WorkspaceDesktop dataset={dataset} isLoadingMessages={isLoadingMessages} storedMessages={storedMessages || []} />
+        <WorkspaceDesktop isLoadingMessages={isLoadingMessages} storedMessages={storedMessages || []} />
       </div>
       <div className="block sm:hidden border-t border-gray-800 h-screen">
-        <WorkspaceMobile dataset={dataset} isLoadingMessages={isLoadingMessages} storedMessages={storedMessages || []} />
+        <WorkspaceMobile isLoadingMessages={isLoadingMessages} storedMessages={storedMessages || []} />
       </div>
     </>
   )
@@ -31,9 +30,8 @@ export function Workspace({ dataset }: { dataset: DatasetTable }) {
 
 
 function WorkspaceDesktop({
-  dataset, isLoadingMessages, storedMessages
+  isLoadingMessages, storedMessages
 }: {
-  dataset: DatasetTable,
   isLoadingMessages: boolean,
   storedMessages: UIMessage[]
 }) {
@@ -54,22 +52,21 @@ function WorkspaceDesktop({
             </div>
 
             <div className="flex-1 min-h-0">
-              <Chat datasetId={dataset.id} initialMessages={storedMessages || []} />
+              <Chat initialMessages={storedMessages || []} />
             </div>
           </div>
         )}
       </div>
 
-      <Dataset dataset={dataset} />
+      <Dataset />
     </div>
   )
 }
 
 
 function WorkspaceMobile({
-  dataset, isLoadingMessages, storedMessages
+  isLoadingMessages, storedMessages
 }: {
-  dataset: DatasetTable,
   isLoadingMessages: boolean,
   storedMessages: UIMessage[]
 }) {
@@ -107,11 +104,11 @@ function WorkspaceMobile({
         </div>
 
         <TabsContent value="chat" className="flex-1 min-h-0">
-          <Chat datasetId={dataset.id} initialMessages={storedMessages || []} />
+          <Chat initialMessages={storedMessages || []} />
         </TabsContent>
 
         <TabsContent value="dataset" className="flex-1 min-h-0">
-          <Dataset dataset={dataset} />
+          <Dataset />
         </TabsContent>
       </Tabs>
     </div>
