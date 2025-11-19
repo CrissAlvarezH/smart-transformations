@@ -75,7 +75,7 @@ export async function createDatasetVersion(
   db: PGLiteManager,
   datasetId: number,
   tranformationSql: string,
-) {
+): Promise<{ tableName: string }> {
   // get the last version of the original table
   const result = await db.query(`
     SELECT version FROM dataset_versions 
@@ -115,6 +115,10 @@ export async function createDatasetVersion(
     INSERT INTO dataset_versions (table_name, columns, version, dataset_id, created_at)
     VALUES ($1, $2, $3, $4, NOW())
   `, [newVersionTableName, columnNames, newVersionNumber, datasetId]);
+
+  return {
+    tableName: newVersionTableName,
+  }
 }
 
 

@@ -30,7 +30,13 @@ export const useOnToolCall = () => {
 
       case 'create_transformation':
         try {
-          await createDatasetVersion(db, dataset.id, toolCall.input.sql);
+          const { tableName } = await createDatasetVersion(db, dataset.id, toolCall.input.sql);
+
+          queryClient.invalidateQueries({ queryKey: [DATASETS] });
+          queryClient.invalidateQueries({ queryKey: [DATASET_DATA, dataset.id] });
+          queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, dataset.id] });
+
+          return { success: true, newTableName: tableName };
         } catch (error) {
           console.error('Error creating transformation', error);
           return {
@@ -38,10 +44,6 @@ export const useOnToolCall = () => {
             error: error instanceof Error ? error.message : 'Failed to create transformation',
           };
         }
-        queryClient.invalidateQueries({ queryKey: [DATASETS] });
-        queryClient.invalidateQueries({ queryKey: [DATASET_DATA, dataset.id] });
-        queryClient.invalidateQueries({ queryKey: [DATASET_VERSIONS, dataset.id] });
-        return { success: true };
 
       case 'query_data':
         try {
@@ -49,8 +51,8 @@ export const useOnToolCall = () => {
 
           // the output must be array of arrays of strings, exampel [[1, 2, 3], [4, 5, 6]]
           return {
-            data: result.map((row: any) => Object.values(row)),
-            columns: Object.keys(result[0]),
+            data: result.data.map((row: any) => Object.values(row)),
+            columns: result.fields.map((field: any) => field.name),
           };
 
         } catch (error) {

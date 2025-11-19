@@ -27,6 +27,10 @@ export const applyTransformation = (datasetContext: RequestDatasetContext) => to
     }),
     outputSchema: z.object({
       success: z.boolean().describe('Whether the transformation was created successfully.'),
+      newTableName: z.string().optional().describe([
+        'The name of the new table that was created if the transformation was successful,',
+        'this table is the new version of the dataset with the transformation applied.'
+      ].join(' ')),
       error: z.string().optional().describe('The error message if the transformation was not created successfully.'),
     }),
 })

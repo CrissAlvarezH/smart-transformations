@@ -265,7 +265,7 @@ export async function queryDB(
   db: PGLiteManager,
   sql: string,
   limit: number = NO_QUERY_LIMIT, 
-): Promise<any[]> {
+): Promise<{ data: any[], fields: any[] }> {
   let limitClause = '';
   if (limit !== NO_QUERY_LIMIT) {
     limitClause = `LIMIT ${limit}`;
@@ -278,5 +278,9 @@ export async function queryDB(
     SELECT * FROM original_query
     ${limitClause}
   `);
-  return result.rows;
+
+  return {
+    data: result.rows,
+    fields: result.fields,
+  };
 }
