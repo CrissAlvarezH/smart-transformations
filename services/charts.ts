@@ -96,6 +96,7 @@ export async function saveChart(db: PGLiteManager, datasetId: number, chartId: n
 export async function getSavedCharts(db: PGLiteManager, datasetId: number): Promise<ChartTable[]> {
   const result = await db.query(`
     SELECT * FROM dataset_charts WHERE dataset_id = $1 AND is_saved = TRUE
+    ORDER BY created_at DESC
   `, [datasetId]);
   return result.rows;
 }

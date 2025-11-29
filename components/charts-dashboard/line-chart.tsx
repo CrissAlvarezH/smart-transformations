@@ -33,7 +33,7 @@ export const LinesChart = memo(function LinesChart({
       <LineChart
         style={{ width: '100%', height: '100%', aspectRatio: 1.618 }}
         responsive
-        data={data}
+        data={data?.data ?? []}
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey={xAxisName} />
@@ -42,7 +42,7 @@ export const LinesChart = memo(function LinesChart({
         <Legend />
 
         {linesNames.map((lineName: string, index: number) => (
-          <Line key={lineName} type="monotone" dataKey={lineName} stroke={CHART_COLORS[index % CHART_COLORS.length]} activeDot={{ r: 8 }} />
+          <Line key={lineName} type="monotone" dataKey={lineName.toLowerCase()} stroke={CHART_COLORS[index % CHART_COLORS.length]} activeDot={{ r: 8 }} />
         ))}
       </LineChart>
     </div>
