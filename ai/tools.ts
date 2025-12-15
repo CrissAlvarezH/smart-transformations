@@ -1,8 +1,9 @@
+import "server-only";
 import { openai } from "@ai-sdk/openai";
 import { tool } from "ai";
 import { z } from "zod";
 import { generateObject } from "ai";
-import { RequestDatasetContext } from "./route";
+import { RequestDatasetContext } from "../app/api/chat/route";
 
 
 export const queryData = (datasetContext: RequestDatasetContext) => tool({
